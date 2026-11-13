@@ -6,7 +6,7 @@ Roteiro operacional do Pipeline A (ver `pesquisa-workflow-agentico.md`, seção 
 
 - Abra o Claude **na pasta do projeto** (`cd <projeto> && claude`, ou abra a pasta no VS Code). Só assim o `.claude/settings.json` do projeto carrega.
 - Confira em `/plugin` que `superpowers`, `spec-driven-dev`, `engineering`, `agent-architecture-designer` e `supabase` estão **desligados** e que `mattpocock-skills` está ligado.
-- Na primeira vez num repo: `/mattpocock-skills:setup-matt-pocock-skills` (tracker GitHub, labels padrão, single-context), depois `gh label create type:spec` e `gh label create type:ticket`.
+- Na primeira vez num repo: `/mattpocock-skills:setup-matt-pocock-skills` (tracker GitHub, labels padrão, single-context), depois `gh label create type:spec`, `gh label create type:ticket` e `gh label create model:opus`.
 - Mods: `/quota` (cota do Pro), `/context-lens` (contexto), `/pull-request-pane` (PR, CI e review) e `/flow` (subagentes).
 
 ## Fases
@@ -17,9 +17,10 @@ Roteiro operacional do Pipeline A (ver `pesquisa-workflow-agentico.md`, seção 
 | **F4 System design** (no mesmo grilling) | Peça explicitamente: "agora as decisões técnicas: persistência, fronteiras de módulo, server actions × route handlers, validação" | "Implementation Decisions"; ADRs | **G3:** você aprova cada trade-off |
 | **F2 Spec** | `/mattpocock-skills:to-spec` e peça: critérios de aceite Given/When/Then por história, requisitos não funcionais, seção "Perguntas em aberto: nenhuma" | Issue com label `type:spec` (ainda **sem** `ready-for-agent`) | — |
 | **F3 Lacunas** | Cole o prompt da seção "Prompt F3" abaixo | Lista numerada de lacunas → responda no formato do grilling → spec atualizada | **G2:** zero lacunas abertas → aplique `ready-for-agent` |
-| **F5 Tickets** | `/mattpocock-skills:to-tickets #<spec>` | 3 a 5 sub-issues (`type:ticket`) com `blocked-by` nativo | **G4:** granularidade e dependências aprovadas → `/clear` |
-| **F6 Implementação** | `git switch -c feat/<spec#>-<slug>`, depois `/mattpocock-skills:implement #<ticket>`, um ticket por vez, na ordem da fronteira | Um commit `feat(#<ticket>): …` por ticket; ticket fechado com SHA | DoD (abaixo) |
-| **F7 Verificação** | `/mattpocock-skills:code-review main` → `/code-review` → correções → `/mattpocock-skills:pr` → `gh pr create` | PR com Summary, Evidence e Merge Danger; CI verde | **Você faz o merge** |
+| **F5 Tickets** | `/mattpocock-skills:to-tickets #<spec>` | Sub-issues (`type:ticket`) com `blocked-by` nativo | **G4:** granularidade e dependências aprovadas; marque `model:opus` nos tickets arriscados (ver abaixo) → `/clear` |
+| **F6 + F7 por ticket** | `/ship-ticket` (propõe o próximo ticket livre) ou `/ship-ticket <n>` | Branch `feat/<n>-<slug>` → `implementer` (Sonnet, ou Opus) → reviews com veredito por finding → PR → CI verde | **Você faz o merge** → `/clear` → próximo `/ship-ticket` |
+
+**Quando marcar `model:opus` no G4:** o ticket mexe com concorrência, transações, máquinas de estado, cache e invalidação, autenticação e permissões, ou dinheiro. Em dúvida, deixe sem o label: a `/ship-ticket` escala para Opus sozinha se o Sonnet travar ou se o review achar bug de correção, e comenta o motivo no ticket. Escaladas frequentes indicam que o critério do G4 precisa mudar.
 | **F8 Retro** | `/mattpocock-skills:retro` | Melhorias no ambiente → viram commit `retro(<projeto>): …` no harness | — |
 
 ## Prompt F3 (análise de lacunas)
@@ -43,7 +44,7 @@ Critérios de aceite testáveis · seam de teste definido · bloqueadores declar
 
 ## Definition of Done (ticket)
 
-Teste vermelho → verde no seam · `pnpm typecheck`, `pnpm lint` e `pnpm test` verdes, **com o comando e a saída como evidência** · commit `feat(#n)` · `ASSUMPTION:` registradas no ticket · ticket fechado com o SHA.
+Teste vermelho → verde no seam · `pnpm typecheck`, `pnpm lint` e `pnpm test` verdes, **com o comando e a saída como evidência** · commit `feat(#n)` · `ASSUMPTION:` registradas no ticket · todo finding com veredito (fix, accept ou reject) · PR com `Closes #n` e CI verde · linha `Métricas:` no ticket.
 
 ## Fronteira de fase: continuar, `/clear` ou `/compact`?
 
@@ -83,9 +84,6 @@ Para medir: anote o % do `/usage` **antes e depois de cada fase** (o `/quota` n�
 
 **Achados levados ao template:** verify-gate passa a cobrir os commits da branch e a checar o `prettier --check`; `format:check` no CI; duas regras de erros no `CODING_STANDARDS.md`; gotchas de edição por `sed` e de pipe que esconde o exit code.
 
-**Em aberto para a Etapa 2:**
-- `implement` na spec rodou os 5 tickets numa sessão só, contra o "um ticket por vez + `/clear`" deste playbook. Funcionou; decidir qual modo vira o padrão.
-- Implementador em Sonnet, já que o `tdd` em Opus foi o maior consumidor.
-- O `to-spec` aplica `ready-for-agent` antes do G2.
-- Skills de padrões (Next/React) lidas **durante** a implementação.
-- Bloquear escrita em `node_modules/`.
+**Resolvido na Etapa 2:** 1 PR por ticket com `/ship-ticket` · implementador em Sonnet, com `model:opus` e escalada automática · regra do `ready-for-agent` no `CLAUDE.md` · `CODING_STANDARDS.md` lido antes de codificar · bloqueio de Edit/Write em `node_modules/`.
+
+**Ainda em aberto:** skills de padrões Next/React, lidas pelo implementador e pelo revisor.
