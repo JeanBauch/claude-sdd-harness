@@ -51,7 +51,7 @@ Na ordem (critério do Matt): **continuar** se a próxima fase precisa desta con
 
 ## Quando algo trava
 
-- **O verify-gate não deixa o turno terminar:** leia o erro, que é o motivo real. Para desligar só nesta sessão: `SDD_VERIFY_GATE=off claude`.
+- **O verify-gate não deixa o turno terminar:** leia o erro, que é o motivo real (formatação, tipo ou teste). Numa branch de feature, ele também checa o que já foi commitado desde `main`, então um erro de um ticket anterior bloqueia. Para desligar só nesta sessão: `SDD_VERIFY_GATE=off claude`.
 - **Um hook bloqueou um comando legítimo** (por exemplo, `git push` que você quer fazer): rode você mesmo no terminal. O agente não deve tentar contornar.
 - **O agente comentou `NEEDS-DECISION:`:** decida no ticket e diga "continue".
 
@@ -66,3 +66,26 @@ Na ordem (critério do Matt): **continuar** se a próxima fase precisa desta con
 | Findings do review (verdadeiros / rejeitados) | |
 | `ASSUMPTION:` que chegaram ao PR | |
 | Bloqueios do verify-gate (úteis / ruído) | |
+
+Para medir: anote o % do `/usage` **antes e depois de cada fase** (o `/quota` não grava o valor). Os demais números saem das transcrições em `~/.claude/projects/<projeto>/*.jsonl` (subagentes em `<sessão>/subagents/`) e da API do GitHub (issues, comentários `ASSUMPTION:`, eventos `reopened`).
+
+### Piloto 1: reading-list (2026-11-13)
+
+| Métrica | Valor |
+|---|---|
+| Cota usada | 12% da janela de 5 horas e 8% da semana, lidos no fim, incluindo a sessão do harness. ~219 mil tokens de saída e ~22,7 milhões de leitura de cache, tudo Opus, em 3 sessões e 4 subagentes, das 16:55 às 21:17. Maiores consumidores: `/mattpocock-skills:tdd` (13%) e o plugin do Matt (24% no total) |
+| Rodadas de grilling até o G1 | 3 (15 perguntas) |
+| Lacunas encontradas no F3 | 11, todas aceitas e incorporadas na spec |
+| Tickets / tickets reabertos | 5 / 0, mais 2 de follow-up (#8 e #9) |
+| Findings do review (verdadeiros / rejeitados) | 26 / 3, num total de 29. `/code-review` embutido: 7 corrigidos, 2 aceitos como risco, 1 rejeitado. Standards: 3 corrigidos, 5 aceitos, 2 rejeitados. Spec: 1 corrigido, 8 aceitos. Os 3 bugs de correção (transação sem ROLLBACK, corrida do Cancelar, rejeição de Server Action) vieram só do `/code-review` embutido |
+| `ASSUMPTION:` que chegaram ao PR | 4 (#2, #4, #5, #6); `NEEDS-DECISION:` 0 |
+| Bloqueios do verify-gate (úteis / ruído) | 0 / 0 em 4 execuções. **Inócuo:** o hook só olhava mudanças não commitadas, e cada ticket era commitado antes do fim do turno. Corrigido no harness |
+
+**Achados levados ao template:** verify-gate passa a cobrir os commits da branch e a checar o `prettier --check`; `format:check` no CI; duas regras de erros no `CODING_STANDARDS.md`; gotchas de edição por `sed` e de pipe que esconde o exit code.
+
+**Em aberto para a Etapa 2:**
+- `implement` na spec rodou os 5 tickets numa sessão só, contra o "um ticket por vez + `/clear`" deste playbook. Funcionou; decidir qual modo vira o padrão.
+- Implementador em Sonnet, já que o `tdd` em Opus foi o maior consumidor.
+- O `to-spec` aplica `ready-for-agent` antes do G2.
+- Skills de padrões (Next/React) lidas **durante** a implementação.
+- Bloquear escrita em `node_modules/`.
