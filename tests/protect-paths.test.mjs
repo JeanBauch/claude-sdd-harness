@@ -13,9 +13,12 @@ const blocked = [
   'package-lock.json',
   'yarn.lock',
   'bun.lock',
+  'node_modules/next/dist/server/lib/start-server.js',
+  'F:\\proj\\node_modules\\react\\index.js',
+  'packages/web/node_modules/.pnpm/x/index.js',
 ]
 
-const allowed = ['.env.example', 'src/app/page.tsx', 'src/environment.ts', 'docs/env.md', 'package.json']
+const allowed = ['.env.example', 'src/app/page.tsx', 'src/environment.ts', 'docs/env.md', 'package.json', 'src/node_modules_notes.md']
 
 for (const file of blocked) {
   test(`blocks edits to ${file}`, () => {
