@@ -1,5 +1,9 @@
 # {{PROJECT_NAME}}
 
+## Framework rules
+Claude Code reads this file instead of AGENTS.md, so the Next.js agent rules are imported here:
+@AGENTS.md
+
 ## Commands
 - Install: `pnpm install`
 - Dev server: `pnpm dev`
