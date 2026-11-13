@@ -1,0 +1,9 @@
+# personal notes (this repository is public)
+anotacoes.txt
+
+node_modules/
+
+# Claude Code (local only)
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
