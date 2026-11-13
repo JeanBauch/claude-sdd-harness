@@ -24,12 +24,12 @@ O script nunca sobrescreve arquivos existentes sem `--force`. Depois, numa sess�
 | Arquivo | Função |
 |---|---|
 | `.claude/settings.json` | Liga o plugin do Matt e desliga os plugins concorrentes (Superpowers e outros); permissões; hooks |
-| `.claude/hooks/verify-gate.mjs` | `Stop`: typecheck + `vitest related` nos arquivos alterados; bloqueia o fim do turno se algo estiver vermelho |
+| `.claude/hooks/verify-gate.mjs` | `Stop`: `prettier --check`, typecheck e `vitest related` nos arquivos alterados (os não commitados e, numa branch de feature, tudo o que foi commitado desde `main`); bloqueia o fim do turno se algo estiver vermelho e lembra o último estado verde |
 | `.claude/hooks/git-guardrails.mjs` | Bloqueia force push, push para `main`, `reset --hard`, `clean -f`, `checkout .`, `branch -D`, `gh pr merge` |
 | `.claude/hooks/protect-paths.mjs` | Bloqueia a edição de `.env*` e lockfiles |
 | `.claude/hooks/format.mjs` | Prettier no arquivo editado |
 | `CLAUDE.md`, `CODING_STANDARDS.md` | Regras do fluxo e padrões para o review |
-| `.github/workflows/ci.yml` | lint → typecheck → test → build → e2e |
+| `.github/workflows/ci.yml` | format:check → lint → typecheck → test → build → e2e (o projeto precisa dos scripts `format:check`, `lint`, `typecheck`, `test`, `build` e `test:e2e`) |
 
 Para desligar o verify-gate numa sessão: `SDD_VERIFY_GATE=off claude`.
 
