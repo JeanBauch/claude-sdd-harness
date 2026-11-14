@@ -86,4 +86,4 @@ Para medir: anote o % do `/usage` **antes e depois de cada fase** (o `/quota` n�
 
 **Resolvido na Etapa 2:** 1 PR por ticket com `/ship-ticket` · implementador em Sonnet, com `model:opus` e escalada automática · regra do `ready-for-agent` no `CLAUDE.md` · `CODING_STANDARDS.md` lido antes de codificar · bloqueio de Edit/Write em `node_modules/`.
 
-**Ainda em aberto:** skills de padrões Next/React, lidas pelo implementador e pelo revisor.
+**Skills de padrões** (`next-architecture`, `react-state`, `seo`): escritas a partir de `docs/research/`, pré-carregadas pelo `implementer` e cobradas pelo review via `CODING_STANDARDS.md`. Ficam para depois do deploy: Lighthouse CI e as skills específicas do projeto grande.

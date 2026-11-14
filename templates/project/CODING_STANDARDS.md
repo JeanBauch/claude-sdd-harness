@@ -4,6 +4,10 @@ Read by the implementer before coding and by reviewers after. Only judgement cal
 (formatting, import order, banned APIs) belongs in lint, typecheck or a hook. Where this file and the
 reviewer's code-smell baseline disagree, this file wins.
 
+## Framework patterns
+
+The rules in `.claude/skills/next-architecture/SKILL.md`, `.claude/skills/react-state/SKILL.md` and `.claude/skills/seo/SKILL.md` are standards too: review against them. This file holds the project's own judgement calls.
+
 ## Design
 
 - Prefer deep modules: a small public interface hiding real behaviour. Avoid pass-through wrappers.
