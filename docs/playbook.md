@@ -19,9 +19,13 @@ Roteiro operacional do Pipeline A (ver `pesquisa-workflow-agentico.md`, seção 
 | **F3 Lacunas** | Cole o prompt da seção "Prompt F3" abaixo | Lista numerada de lacunas → responda no formato do grilling → spec atualizada | **G2:** zero lacunas abertas → aplique `ready-for-agent` |
 | **F5 Tickets** | `/mattpocock-skills:to-tickets #<spec>` | Sub-issues (`type:ticket`) com `blocked-by` nativo | **G4:** granularidade e dependências aprovadas; marque `model:opus` nos tickets arriscados (ver abaixo) → `/clear` |
 | **F6 + F7 por ticket** | `/ship-ticket` (propõe o próximo ticket livre) ou `/ship-ticket <n>` | Branch `feat/<n>-<slug>` → `implementer` (Sonnet, ou Opus) → reviews com veredito por finding → PR → CI verde | **Você faz o merge** → `/clear` → próximo `/ship-ticket` |
+| **F8 Retro** (ao fechar o spec) | Gere a evidência e rode o `/mattpocock-skills:retro` com o prompt da seção "Prompt F8" | Candidatos com ocorrências e ponteiros → mudanças em branch `chore/retro-<n>` no projeto ou commit `retro(<projeto>): …` no harness | **Você aprova** cada candidato |
 
 **Quando marcar `model:opus` no G4:** o ticket mexe com concorrência, transações, máquinas de estado, cache e invalidação, autenticação e permissões, ou dinheiro. Em dúvida, deixe sem o label: a `/ship-ticket` escala para Opus sozinha se o Sonnet travar ou se o review achar bug de correção, e comenta o motivo no ticket. Escaladas frequentes indicam que o critério do G4 precisa mudar.
-| **F8 Retro** | `/mattpocock-skills:retro` | Melhorias no ambiente → viram commit `retro(<projeto>): …` no harness | — |
+
+**Requisitos de desempenho no F3 e no G4:** cada um vira (1) um teste determinístico que pega a regressão, contando consultas ou operações, e (2) um limite absoluto folgado tirado do próprio requisito. Nunca um limite em milissegundos calibrado na máquina de quem escreveu: ele oscila no CI.
+
+**Regras ficam numa camada à parte:** nas branches `feat/*` e `fix/*`, o hook `protect-paths` bloqueia edições em `CLAUDE.md`, `AGENTS.md`, `CODING_STANDARDS.md` e `.claude/**`. O implementer propõe a mudança num comentário `NEEDS-DECISION:`, e ela entra no F8.
 
 ## Prompt F3 (análise de lacunas)
 
@@ -37,6 +41,26 @@ principalmente decisões que um LLM teria de inferir sozinho durante a implement
 Formato: perguntas numeradas, cada uma com uma resposta recomendada, no estilo do grilling. Até 400 palavras.
 Pule estilo e redação.
 ```
+
+## Prompt F8 (retro do spec)
+
+Num terminal na pasta do projeto, gere a evidência. O script lê as transcrições de todas as sessões do spec, incluindo subagentes, e os tickets e PRs via `gh`. Não gasta tokens.
+
+```bash
+node <harness>/scripts/retro-evidence.mjs --project . --spec <N> --out ../retro-spec-<N>.md
+```
+
+Depois, numa sessão nova no projeto:
+
+```text
+/mattpocock-skills:retro Fonte primária: ../retro-spec-<N>.md (evidência do spec #<N>, todos os tickets).
+Abra as transcrições só nos ponteiros arquivo:linha que precisar (pasta ~/.claude/projects/<projeto>/).
+Para cada candidato, informe: ocorrências, tickets afetados, ponteiros de evidência e destino
+(harness: vale para qualquer projeto · projeto: ADR, CODING_STANDARDS ou skill local · memória do usuário: fato da máquina).
+Marque como "caso isolado" o que aparece em um só ticket. Proponha também remover regras que a evidência mostra sem efeito.
+```
+
+As mudanças aprovadas vão para uma branch `chore/retro-<N>` no projeto. As que valem para qualquer projeto viram commit no harness, com o trailer `Retro-Source: <projeto> spec #<N>`.
 
 ## Definition of Ready (ticket)
 

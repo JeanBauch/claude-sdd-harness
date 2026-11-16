@@ -11,9 +11,10 @@ Design and rationale: `docs/pesquisa-workflow-agentico.md`. Phase-by-phase playb
 ## Commands
 - Test: `npm test` (zero dependencies)
 - Preview applying the template: `node scripts/apply-template.mjs <dir> --name <project> --dry-run`
+- Retro evidence for a spec: `node scripts/retro-evidence.mjs --project <dir> --spec <n> --out <file>`
 
 ## Rules
 - Change a hook test-first: add the failing case in `tests/`, then change the hook.
 - Keep `templates/project/CLAUDE.md` short; procedures belong in skills, review judgement in `CODING_STANDARDS.md`.
-- Findings from a project's `/retro` land here as template changes, committed as `retro(<project>): <change>`.
+- Findings from a project's `/retro` land here as template changes, committed as `retro(<project>): <change>` with a `Retro-Source: <project> spec #<n>` trailer.
 - Human-facing docs in Brazilian Portuguese; code, identifiers and commit messages in English.
