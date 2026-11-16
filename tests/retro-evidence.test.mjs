@@ -37,9 +37,14 @@ function transcripts(files) {
 
 test('maps a project path to its Claude Code transcripts folder', () => {
   const home = tempDir('retro-home-')
-  writeFile(home, '.claude/projects/f--Projetos-reading-list/a.jsonl', '')
-  assert.equal(transcriptsDirFor('F:\\Projetos\\reading-list', home), join(home, '.claude', 'projects', 'f--Projetos-reading-list'))
-  assert.equal(transcriptsDirFor('F:\\Projetos\\missing', home), null)
+  // Claude Code turns every separator (and the drive colon) into a dash: F:\Projetos\x → f--Projetos-x, /home/u/x → -home-u-x.
+  const [project, folder, missing] =
+    process.platform === 'win32'
+      ? ['F:\\Projetos\\reading-list', 'f--Projetos-reading-list', 'F:\\Projetos\\missing']
+      : ['/home/u/reading-list', '-home-u-reading-list', '/home/u/missing']
+  writeFile(home, `.claude/projects/${folder}/a.jsonl`, '')
+  assert.equal(transcriptsDirFor(project, home), join(home, '.claude', 'projects', folder))
+  assert.equal(transcriptsDirFor(missing, home), null)
 })
 
 test('a failing command repeated across two tickets is a recurring signal with pointers', () => {
