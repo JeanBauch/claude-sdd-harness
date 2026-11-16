@@ -1,7 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
-import { gitRepo, git, runHook } from './helpers.mjs'
+import { symlinkSync } from 'node:fs'
+import { gitRepo, git, runHook, tempDir } from './helpers.mjs'
 
 const edit = (file_path, tool_name = 'Edit') => ({ hook_event_name: 'PreToolUse', tool_name, tool_input: { file_path } })
 
@@ -83,4 +84,12 @@ test('allows rule files outside the repo, such as user memory', () => {
   const outside = gitRepo()
   const r = runHook('protect-paths.mjs', { tool_name: 'Write', cwd: root, tool_input: { file_path: join(outside, 'CLAUDE.md') } })
   assert.equal(r.code, 0, r.stderr)
+})
+
+test('blocks rule files reached through another spelling of the repo path (8.3 names, links)', () => {
+  const root = repoOn('feat/9-volume-test')
+  const alias = join(tempDir('alias-'), 'repo')
+  symlinkSync(root, alias, 'junction')
+  const r = runHook('protect-paths.mjs', { tool_name: 'Edit', cwd: root, tool_input: { file_path: join(alias, 'CLAUDE.md') } })
+  assert.equal(r.code, 2, r.stderr)
 })

@@ -5,7 +5,8 @@
 // branch (feat/*, fix/*) they are read-only, so an implementer never rewrites its own rules mid-ticket.
 // They change on retro branches (chore/*), reviewed by the human.
 import { spawnSync } from 'node:child_process'
-import { basename, isAbsolute, relative, resolve } from 'node:path'
+import { existsSync, realpathSync } from 'node:fs'
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { gitRoot, readStdinJson } from './lib.mjs'
 
 const ENV_FILE = /^\.env(\..+)?$/
@@ -24,11 +25,28 @@ export function blockReason(filePath) {
   return null
 }
 
+/**
+ * The canonical spelling of a path that may not exist yet (a Write creating a file): the real path of its
+ * nearest existing ancestor plus the rest. This unifies Windows 8.3 short names (RUNNER~1), links and
+ * drive-letter case, which `git rev-parse --show-toplevel` never returns.
+ */
+function canonical(path) {
+  let head = resolve(path)
+  const rest = []
+  while (!existsSync(head)) {
+    const parent = dirname(head)
+    if (parent === head) return resolve(path)
+    rest.unshift(basename(head))
+    head = parent
+  }
+  return join(realpathSync.native(head), ...rest)
+}
+
 /** Why a rule file may not change here, or null. `filePath` is resolved against `cwd`. */
 export function ruleLayerReason(filePath, cwd) {
   const root = gitRoot(cwd)
   if (!root) return null
-  const rel = relative(root, resolve(cwd, filePath)).replace(/\\/g, '/')
+  const rel = relative(canonical(root), canonical(resolve(cwd, filePath))).replace(/\\/g, '/')
   if (rel.startsWith('../') || isAbsolute(rel)) return null
   const isRule = RULE_FILES.has(basename(rel)) || /(^|\/)\.claude\//.test(rel)
   if (!isRule) return null
