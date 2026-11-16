@@ -88,6 +88,8 @@ Escalate once per ticket. If Opus also returns `stuck`, stop and hand the failin
 
 Allow at most two red rounds, then stop and report.
 
+A red check in a test this ticket did not touch, which passes on rerun (`gh run rerun <run-id> --failed`) with no change, is a flaky test: open an issue `flaky: <test name>` with the failing log line, and do not count it as `ci-vermelho`.
+
 Done when every check passes.
 
 ## 10. Report
@@ -96,9 +98,11 @@ Comment on the ticket with one line:
 
 `Métricas: modelo=<sonnet|opus|sonnet→opus> · findings=<fix>/<accept>/<reject> · assumptions=<n> · ci-vermelho=<n>`
 
+`assumptions` counts the ASSUMPTION comments on the ticket now, after edits, so a replaced assumption counts once.
+
 Then tell the human:
 
 - the PR URL;
 - that CI is green;
 - the same metrics;
-- and finally: "Pronto para o seu merge. Depois: `/clear` e `/ship-ticket`."
+- and finally, when the PR closes the spec: "Spec #<spec> concluído. Depois do merge: `/clear` e o retro do spec (playbook, F8)." Otherwise: "Pronto para o seu merge. Depois: `/clear` e `/ship-ticket`."
