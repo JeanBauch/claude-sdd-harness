@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# CI only reads the code; a compromised step cannot push, comment or change settings with this token.
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
