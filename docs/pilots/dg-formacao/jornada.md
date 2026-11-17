@@ -1,0 +1,151 @@
+# Jornada DG Formação
+
+Registro da construção do DG Formação (Discipulando Gerações) com o claude-sdd-harness. Quem mantém é a sessão acompanhada ([prompt-sessao-acompanhada.md](prompt-sessao-acompanhada.md)). As seções de referência mudam conforme a jornada avança; a seção **Entradas** só recebe linhas novas no fim.
+
+Specs, tickets, PRs e CI vivem no GitHub (`JeanBauch/dg-formacao`), e o histórico, no git dos dois repositórios. Aqui fica o que eles não guardam: o resumo de cada sessão, as decisões de portão e o motivo, a cota, os atritos do harness e as métricas por spec. Este arquivo é público: nada de dados pessoais nem segredos.
+
+## Objetivo
+
+1. Entregar o MVP do DG Formação descrito nos requisitos v2.3 (fatias R0 a R5, seção 10.4), em planos gratuitos (ADR-007).
+2. Pôr o harness à prova num projeto grande. Cada atrito com evidência vira candidato à retro e, aprovado, vira mudança no template, com o trailer `Retro-Source: dg-formacao spec #<n>`.
+
+A jornada termina quando o R5 fecha com o critério de saída cumprido e cada spec tem as métricas registradas.
+
+## Mapa das sessões
+
+Quem abre cada portão é o usuário. Cada sessão do projeto termina com `/relatorio-sessao`.
+
+### Preparação
+
+| Sessão | Fase | Objetivo | Portão |
+| --- | --- | --- | --- |
+| S0 | Bootstrap | Montar o esqueleto Next.js 16.4, aplicar o template do harness, fazer os ajustes do projeto e criar o repositório público protegido | Relatório aceito com: `format:check`, `lint`, `typecheck`, `test`, `build` e `test:e2e` verdes; CI verde na `main`; ruleset `protect-main` ativo; segurança do repositório confirmada; smoke test dos hooks com os códigos de saída esperados |
+| S1 | F1 + F4 Descoberta | Rodar `/mattpocock-skills:grill-with-docs` sobre `docs/requisitos/` e gerar o `GLOSSARY.md` e as ADR-001 a 010 em `docs/adr/`. Decidir os itens "Proposto" da seção 1.5 e a ADR-005, devolver as mudanças a `docs/requisitos/` e entregar tudo num PR | G1: nenhuma pergunta pendente · G3: cada trade-off aprovado · merge do PR, o primeiro a passar pelo ruleset |
+
+### R0 Esqueleto e operação
+
+| Sessão | Fase | Objetivo | Portão |
+| --- | --- | --- | --- |
+| R0.1 | F2 + F3 | Escrever a spec do R0 com `to-spec`. As verificações da seção 10.4 e os itens "Unverified" das skills entram como critérios de aceite. Depois, rodar o prompt F3 | G2: zero lacunas → `ready-for-agent` |
+| R0.2 | F5 | `to-tickets #<spec>`: sub-issues com `blocked-by` | G4: granularidade e dependências aprovadas; `model:opus` nos tickets de autenticação, transação, backup e migration |
+| R0.3 em diante | F6 + F7, uma sessão por ticket | `/ship-ticket` | Definition of Done completa e merge feito pelo usuário |
+| R0.e | Avaliação das skills | Rodar os cenários de `docs/agents/skill-evals/` sem e com cada skill | Placar registrado no README das evals; regra que não muda o placar sai da skill |
+| R0.s | Skill `testing-stack` | Escrever a skill e as evals dela a partir dos testes que o R0 criou | Evals escritas e rodadas |
+| R0.r | F8 Retro | `retro-evidence.mjs` + `/mattpocock-skills:retro` | Cada candidato aprovado ou rejeitado; spec fechada |
+
+Saída do R0:
+- as 7 verificações da seção 10.4 respondidas (uma resposta negativa volta aos requisitos);
+- as seções "Unverified" apagadas das duas skills;
+- placar das evals preenchido;
+- E2E de cadastro e login verdes.
+
+### R1 a R5
+
+Cada fatia repete o ciclo do R0:
+- Rn.1 F2 + F3 → G2;
+- Rn.2 F5 → G4;
+- Rn.3 em diante, F6 + F7 → merge;
+- Rn.r F8 → aprovação.
+
+O F4 só volta quando a fatia trouxer uma decisão difícil de reverter, que vira ADR nova.
+
+| Fatia | Antes de começar | Objetivo (seção 10.4) | Saída da fatia |
+| --- | --- | --- | --- |
+| R1 Vitrine | Skill `ui-design-system`, com evals | Design system com os tokens do DESIGN.md, home, catálogo, página do curso, páginas institucionais, carga por CSV, SEO e CSP | CSP e cabeçalhos verificados por teste (RNF-SEG-11); nenhum recurso de terceiros no front (RPV-15); E2E do catálogo verde |
+| R2 Aprender | Skill `integrations`, com evals | Matrícula, aula em vídeo com `VideoPlayer`, aula em PDF, `/media/{id}`, conclusão, progresso, Meus cursos e "Continue assistindo" | E2E de assistir e concluir verde (RNF-QUA-01); testes de contrato do `VideoPlayer` |
+| R3 Família | — | Perfis, "Quem está assistindo?", perfil infantil e escopo do catálogo, PIN do titular, acompanhamento do responsável e consentimentos | Testes da PROFILES.md verdes: escopo infantil em todas as rotas e bloqueio do PIN |
+| R4 Backoffice | — | Formulários, editor de currículo, envio ao R2 com variantes de imagem, revisão, equipe, autores e métricas | E2E de publicar curso verde; uma linha de `audit_log` por escrita da equipe |
+| R5 Lançamento | — | Teste de carga com 150 simultâneos, OWASP ZAP, RIPD, runbooks e plano de e-mail do lançamento | Metas da seção 8.1 atingidas no teste de carga; ZAP sem alerta alto; DPs jurídicos fechados |
+
+## Itens "Unverified" das skills
+
+Cada item vira critério de um ticket do R0. Quando o item se confirmar, a linha correspondente sai da skill; se não se confirmar, a regra da skill muda.
+
+| # | Skill | Item a confirmar | Ticket | Resultado |
+| --- | --- | --- | --- | --- |
+| U1 | data-layer | O drizzle-kit emite `.op('extensions.gin_trgm_ops')` no SQL do índice exatamente como escrito | — | — |
+| U2 | data-layer | O tipo de coluna que o CLI do Better Auth gera para `user.id` quando `generateId` devolve UUID | — | — |
+| U3 | auth-identity | `schemaName: 'app'` no adapter põe todas as tabelas do Better Auth em `app`, inclusive os campos do plugin admin e `rateLimit` | — | — |
+| U4 | auth-identity | O plugin admin guarda vários papéis separados por vírgula em `role` e respeita todos | — | — |
+| U5 | auth-identity | O pedido de reset de senha devolve a mesma resposta para e-mail desconhecido | — | — |
+| U6 | auth-identity | `after()` funciona dentro dos callbacks de e-mail do Better Auth | — | — |
+| U7 | auth-identity | `databaseHooks.user.create.after` roda na requisição do cadastro, de modo que perfil principal e consentimentos podem ser gravados ali | — | — |
+| U8 | auth-identity | Um after-hook em `/sign-in/email` alcança e revoga a sessão que acabou de criar (STAFF.md) | — | — |
+| U9 | auth-identity | Os nomes de rota do rate limit na 1.7: `/sign-in/email`, `/sign-up/email`, `/request-password-reset` e `/send-verification-email` | — | — |
+
+U3 e U4 se sobrepõem ao item 3 das verificações do R0 (seção 10.4). A spec do R0 trata os dois juntos.
+
+## Avaliações de skill pendentes
+
+| Skill | Cenários | Quando rodar | Placar |
+| --- | --- | --- | --- |
+| data-layer | 4 (`docs/agents/skill-evals/data-layer.json`) | R0.e, depois dos tickets que criam o schema | — |
+| auth-identity | 3 (`docs/agents/skill-evals/auth-identity.json`) | R0.e, depois do ticket da configuração do Better Auth | — |
+| testing-stack | a escrever | Fim do R0 | — |
+| ui-design-system | a escrever | Antes do R1 | — |
+| integrations | a escrever | Antes do R2 | — |
+
+## Levar ao F1
+
+- **Conflito nos requisitos:** a seção 9.5 e a CONFIG.md da skill `auth-identity` mantêm o IP na sessão, porque o rate limit depende dele. Já o item 3 da seção 10.4 pede para verificar que "o registro de IP na sessão pode ser desligado". Decidir qual vale e corrigir o outro lado.
+- **A decidir:** a ADR-005 (proposta) e os itens "Proposto" da seção 1.5 (permissões no código, refinamentos técnicos e as fatias da 10.4).
+
+## Atritos do harness
+
+Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a retro de alguma spec decidir.
+
+| # | Atrito | Evidência | Estado |
+| --- | --- | --- | --- |
+| A1 | O `ci.yml` do template não declara `permissions` e fixa as actions por tag. Isso conflita com a RNF-SEG-13 e é boa prática para qualquer projeto | `templates/project/.github/workflows/ci.yml` | Parcial: `permissions: contents: read` entrou no template (ac5a083). Fixar por SHA vira ticket do R0, junto com o Dependabot |
+| A2 | O `.claude/settings.json` do projeto só carrega no início da sessão. Na primeira sessão de um projeto novo, os plugins do usuário (inclusive o SessionStart do superpowers) ficam ligados e os hooks ficam desligados até reiniciar. O playbook não fala disso | `docs/playbook.md:7-8` | Aberto |
+| A3 | O playbook não tem uma fase de bootstrap. O que o piloto fez existe só no histórico do git e na memória | `docs/playbook.md` (seções "Antes de começar" e "Fases") | Aberto; o prompt da S0 é o rascunho |
+
+## Cota por fase
+
+Uma linha por sessão, copiada do relatório.
+
+| Sessão | Fase | Modelo | Janela de 5 h (antes → depois) | Semana (antes → depois) |
+| --- | --- | --- | --- | --- |
+
+## Métricas por spec
+
+As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada fatia.
+
+| Métrica | R0 | R1 | R2 | R3 | R4 | R5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Cota usada (5 h / semana) | | | | | | |
+| Rodadas de grilling até o G1 | | | | | | |
+| Lacunas no F3 | | | | | | |
+| Tickets / reabertos | | | | | | |
+| Findings (verdadeiros / rejeitados) | | | | | | |
+| `ASSUMPTION:` que chegaram ao PR | | | | | | |
+| Escaladas Sonnet → Opus | | | | | | |
+| Bloqueios do verify-gate (úteis / ruído) | | | | | | |
+
+## Entradas
+
+<!-- Uma entrada por relatório recebido ou por rodada de decisões, sempre no fim da lista. As entradas antigas não mudam.
+### <data> · Sessão <n> · <fase> · <fatia> · <spec/ticket>
+- Resumo: <2 linhas>
+- Portão: <qual> · <decisão do usuário> · <motivo>
+- Conferência: <item da DoD ou do portão → ok | falta | não se aplica>
+- Sinais: <candidato à retro → ponteiro> ou nenhum
+- Cota: <5 h> · <semana>
+-->
+
+### 17/11/2026 · Sessão acompanhada 1 · Preparação da S0
+
+- **Resumo:**
+  - jornada criada;
+  - prompt da S0 escrito a partir do playbook, do template e do piloto reading-list;
+  - o usuário aceitou as seis recomendações para antes da S0.
+- **Decisões do usuário, com o motivo:**
+  1. O ruleset entra no fim da S0. A S0 não tem conteúdo para revisar, e o PR do F1 testa o ruleset.
+  2. Os recursos de segurança que são só configuração entram na S0: push protection antes do primeiro push, alertas do Dependabot, relato privado de vulnerabilidades e CodeQL. Gitleaks, `SECURITY.md`, `dependabot.yml` e actions fixadas por SHA viram tickets do R0. A push protection só protege se já estiver ligada no primeiro push.
+  3. `permissions: contents: read` entrou no `ci.yml` do template (ac5a083). Fixar as actions por SHA fica no R0, porque sem o Dependabot os SHAs envelhecem.
+  4. Os requisitos vão para `docs/requisitos/requisitos-v2.3.md`, fora do Prettier e públicos. A varredura não achou e-mail, telefone, CPF, endereço nem segredo.
+  5. A S0 roda em Sonnet, para guardar a cota de Opus para o F1.
+  6. Commit local de `docs/pilots/dg-formacao/`. O push fica para decidir.
+- **Conferência:** não se aplica, porque não houve relatório.
+- **Sinais:** A1 a A3, na seção "Atritos do harness".
+- **Cota:** não medido.
