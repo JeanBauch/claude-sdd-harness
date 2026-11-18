@@ -97,8 +97,12 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | # | Atrito | Evidência | Estado |
 | --- | --- | --- | --- |
 | A1 | O `ci.yml` do template não declara `permissions` e fixa as actions por tag. Isso conflita com a RNF-SEG-13 e é boa prática para qualquer projeto | `templates/project/.github/workflows/ci.yml` | Parcial: `permissions: contents: read` entrou no template (ac5a083). Fixar por SHA vira ticket do R0, junto com o Dependabot |
-| A2 | O `.claude/settings.json` do projeto só carrega no início da sessão. Na primeira sessão de um projeto novo, os plugins do usuário (inclusive o SessionStart do superpowers) ficam ligados e os hooks ficam desligados até reiniciar. O playbook não fala disso | `docs/playbook.md:7-8`; relatório da S0, passo 9 | Confirmado: a S0 parou no passo 9 e virou duas sessões (S0 e S0b) |
+| A2 | O `.claude/settings.json` do projeto só carrega no início da sessão. Na primeira sessão de um projeto novo, os plugins do usuário (inclusive o SessionStart do superpowers) ficam ligados e os hooks ficam desligados até reiniciar. O playbook não fala disso | `docs/playbook.md:7-8`; relatório da S0, passo 9 | Confirmado: a S0 parou no passo 9 e virou duas sessões (S0 e S0b). Depois do reinício, os plugins e hooks carregaram como esperado (transcrição da S0b) |
 | A3 | O playbook não tem uma fase de bootstrap. O que o piloto fez existe só no histórico do git e na memória | `docs/playbook.md` (seções "Antes de começar" e "Fases"); na S0, `vitest.config.mts` e o bloco `# playwright` do `.gitignore`, copiados do piloto | Aberto, 2 ocorrências. Copiar do piloto trouxe o `vite-tsconfig-paths`, que o Vite 8 dispensa, e um `*.tsbuildinfo` duplicado. O passo do `partialPrefetching` também era desnecessário, porque o create-next-app 16.4 já gera essa opção. Candidato: o template passa a trazer `vitest.config.mts`, `playwright.config.ts`, os testes de fumaça e as linhas do Playwright no `gitignore.append`, e o playbook ganha uma seção de bootstrap |
+| A4 | O playbook manda conferir os plugins no `/plugin`, que não existe na extensão do VS Code. A lista de skills da sessão serve como prova: nenhuma skill de plugin desligado aparece nela | `docs/playbook.md:8`; relatório da S0b, passo 1 | Aberto. Candidato: o playbook confere os plugins pela lista de skills da própria sessão, o que funciona em qualquer interface |
+| A5 | A regra "never edit `.env*` or lockfiles" do `CLAUDE.md` do template fez a S0b tratar o `pnpm remove` como conflito. No R0, cada ticket que instala dependência esbarraria nela, e um lockfile fora do commit quebra o `pnpm install --frozen-lockfile` do CI | `templates/project/CLAUDE.md:21`; relatório da S0b | Corrigido no template: lockfile muda só por `pnpm add` e `pnpm remove`, nunca à mão, como o `protect-paths` já dizia. O projeto recebe a mesma linha no PR da S1 |
+| A6 | O `setup-matt-pocock-skills` não criou os labels de triagem `needs-triage`, `needs-info`, `ready-for-agent` e `ready-for-human`. A S0b criou os quatro à mão | relatório da S0b, passo 5 | Aberto, 1 ocorrência. Candidato: o playbook lista os quatro no `gh label create` |
+| A7 | A skill `anthropic-skills:supabase`, sincronizada do claude.ai, aparece nas sessões do projeto, embora o template desligue o plugin `supabase@synced`. A descrição dela pede uso em "ANY task involving Supabase", o que concorre com a `data-layer` no R0 | transcrição da S0b (lista de skills) | Aberto. Decidir na R0.1: desligar por `skillOverrides` no `.claude/settings.json` do projeto, ou medir nas evals da R0.e |
 
 ## Cota por fase
 
@@ -107,6 +111,9 @@ Uma linha por sessão, copiada do relatório.
 | Sessão | Fase | Modelo | Janela de 5 h (antes → depois) | Semana (antes → depois) |
 | --- | --- | --- | --- | --- |
 | S0 | Bootstrap, passos 1 a 8 | Sonnet | não medido | não medido |
+| S0b | Bootstrap, reinício e GitHub | Sonnet | 5% → 12% | 30% → 31% |
+
+O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
 ## Métricas por spec
 
@@ -173,3 +180,24 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - o teste de fumaça importa por caminho relativo, então nenhum teste exercita o alias `@/`. A S0b corrige isso junto com a troca do plugin;
   - nenhum item "Unverified" resolvido.
 - **Cota:** não medido; o relatório deixou o campo para o usuário preencher.
+
+### 17/11/2026 · Sessão 0b · Bootstrap (continuação) · R0 (preparação) · sem spec nem ticket
+
+- **Resumo:**
+  - foram para a `main` a troca do `vite-tsconfig-paths` pelo `resolve.tsconfigPaths` (657d2a9) e o setup das skills do Matt (f17a139);
+  - o repositório `JeanBauch/dg-formacao` foi publicado com CI verde, segurança ligada e ruleset `protect-main` ativo (id 27512496).
+- **Portão:** S0. Todos os critérios conferidos pela sessão acompanhada; a sessão recomenda aceitar.
+- **Conferência:**
+  - `format:check`, `lint`, `typecheck`, `test`, `build` e `test:e2e` verdes → ok (o CI do f17a139 roda todos);
+  - CI verde na `main` → ok: `ci` e `CodeQL` com `success` no f17a139;
+  - ruleset ativo → ok: `deletion`, `non_fast_forward`, `pull_request` com 0 aprovações e check `ci`, sem bypass, alvo `~DEFAULT_BRANCH`;
+  - segurança → ok: secret scanning e push protection `enabled` antes do primeiro push, alertas do Dependabot, relato privado de vulnerabilidades e CodeQL `configured`;
+  - hooks carregados → ok, pela transcrição da S0b: o `verify-gate` rodou em 10 fins de turno sem erro nem bloqueio, e o `format` foi conferido pelo comportamento. `git-guardrails` e `protect-paths` não dispararam porque nenhum comando os acionou; o smoke test da S0 já os cobria;
+  - plugins → ok, pela transcrição da S0b: nenhuma skill dos plugins desligados aparece na lista de skills;
+  - labels → ok: os 5 de triagem e `type:spec`, `type:ticket`, `model:opus` e `capacity`;
+  - nenhum dado pessoal nos arquivos rastreados → ok.
+- **Sinais:**
+  - A4 a A7, na seção "Atritos do harness";
+  - o `/usage` atribui 17% do uso à lista de skills, cerca de 12 mil tokens por requisição, e 75% a conversas longas;
+  - o atrito "branch desprotegida entre os passos 3 e 8" do relatório não é atrito: o ruleset entrou por último de propósito, porque a regra de PR barraria os commits diretos na `main`.
+- **Cota:** 5 h de 5% → 12% · semana de 30% → 31%, incluindo a sessão acompanhada.
