@@ -34,7 +34,7 @@ Quem abre cada portão é o usuário. Cada sessão do projeto termina com `/rela
 | R0.r | F8 Retro | `retro-evidence.mjs` + `/mattpocock-skills:retro` | Cada candidato aprovado ou rejeitado; spec fechada |
 
 Saída do R0:
-- as 7 verificações da seção 10.4 respondidas (uma resposta negativa volta aos requisitos);
+- as 8 verificações da seção 10.4 respondidas (eram 7 na v2.3; uma resposta negativa volta aos requisitos);
 - as seções "Unverified" apagadas das duas skills;
 - placar das evals preenchido;
 - E2E de cadastro e login verdes.
@@ -102,6 +102,9 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A4 | O playbook manda conferir os plugins no `/plugin`, que não existe na extensão do VS Code. A lista de skills da sessão serve como prova: nenhuma skill de plugin desligado aparece nela | `docs/playbook.md:8`; relatório da S0b, passo 1 | Aberto. Candidato: o playbook confere os plugins pela lista de skills da própria sessão, o que funciona em qualquer interface |
 | A5 | A regra "never edit `.env*` or lockfiles" do `CLAUDE.md` do template fez a S0b tratar o `pnpm remove` como conflito. No R0, cada ticket que instala dependência esbarraria nela, e um lockfile fora do commit quebra o `pnpm install --frozen-lockfile` do CI | `templates/project/CLAUDE.md:21`; relatório da S0b | Corrigido no template: lockfile muda só por `pnpm add` e `pnpm remove`, nunca à mão, como o `protect-paths` já dizia. O projeto recebe a mesma linha no PR da S1 |
 | A6 | O `setup-matt-pocock-skills` não criou os labels de triagem `needs-triage`, `needs-info`, `ready-for-agent` e `ready-for-human`. A S0b criou os quatro à mão | relatório da S0b, passo 5 | Aberto, 1 ocorrência. Candidato: o playbook lista os quatro no `gh label create` |
+| A8 | O `RBAC.md` da skill `next-architecture` manda buscar a regra 404 × 403 "na ADR do projeto". Pelo critério do harness, só decisão difícil de reverter vira ADR, e a S1 pôs essa regra na seção 4 dos requisitos | `templates/project/.claude/skills/next-architecture/RBAC.md`; relatório da S1 | Aberto. Mitigado no R0: a spec cita a seção 4 nos critérios de autorização. Candidato: o `RBAC.md` aponta para "a decisão do projeto (ADR ou requisitos)" |
+| A9 | O formato de abertura termina com "rode /relatorio-sessao", mas a skill tem `disable-model-invocation` e só o usuário consegue rodá-la | `docs/pilots/dg-formacao/prompt-sessao-acompanhada.md`; relatório da S1 | Corrigido no formato: o prompt pede para a sessão avisar o usuário |
+| A10 | A skill `relatorio-sessao` do projeto manda preencher a cota "com /quota", mas o valor certo vem do `/usage`, como o playbook diz | `.claude/skills/relatorio-sessao` do projeto; relatório da S1 | Aberto, cosmético. Vai para a branch da retro do R0 |
 | A7 | A skill `anthropic-skills:supabase`, sincronizada do claude.ai, aparece nas sessões do projeto, embora o template desligue o plugin `supabase@synced`. A descrição dela pede uso em "ANY task involving Supabase", o que concorre com a `data-layer` no R0 | transcrição da S0b (lista de skills) | Aberto. Decidir na R0.1: desligar por `skillOverrides` no `.claude/settings.json` do projeto, ou medir nas evals da R0.e |
 
 ## Cota por fase
@@ -112,6 +115,7 @@ Uma linha por sessão, copiada do relatório.
 | --- | --- | --- | --- | --- |
 | S0 | Bootstrap, passos 1 a 8 | Sonnet | não medido | não medido |
 | S0b | Bootstrap, reinício e GitHub | Sonnet | 5% → 12% | 30% → 31% |
+| S1 | F1 + F4 | Opus | não medido → 31% (janela nova) | 31% → 36% |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -237,3 +241,32 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - quando o R0 fechar, a sessão acompanhada escreve o prompt do `grill-with-docs` sobre a #2, partindo das respostas que o usuário deixar em comentários na issue.
 - **Levar ao jurídico, junto com o DP-04:** a lista de pessoas liberadas pode revelar o papel na igreja ou a intenção de casar (seção 7.2, dado sensível).
 - **Sinais:** a `/ship-ticket` só propõe `type:ticket` com spec `ready-for-agent`, então a #2 não entra no ciclo por engano.
+
+### 18/11/2026 · Sessão 1 · F1 Descoberta + F4 System design · R0 (preparação) · PR #1
+
+- **Resumo:**
+  - o PR #1 traz o `GLOSSARY.md`, as ADRs 0001 a 0010 e os requisitos v2.4, renomeados para `docs/requisitos/requisitos.md`, com a seção 1.6;
+  - traz também o IP fora da sessão no `CONFIG.md` da `auth-identity` e a regra de lockfile do template;
+  - grilling de 9 perguntas, Q1 a Q9, cada uma decidida pelo usuário.
+- **Portão:** G1 e G3, mais o merge do PR #1. A sessão inferiu o G1 do aceite da Q9, sem a confirmação explícita do usuário; G1, G3 e merge aguardam o usuário.
+- **Conferência:**
+  - PR #1 `MERGEABLE`/`CLEAN`, com `ci`, `CodeQL` e os dois `Analyze` verdes → ok;
+  - 10 ADRs com status: 0003 "Substituído pela 0008", as outras "Aceito", inclusive a 0005 → ok;
+  - nenhum "Proposto" nos requisitos v2.4 → ok;
+  - nenhum dado pessoal no diff do PR → ok;
+  - DPs que bloqueiam o R0 (02, 04 e 11) listados no PR, com valor provisório e sem usuário real até a resposta → ok;
+  - G1 confirmado pelo usuário → falta.
+- **Decisões do usuário, registradas na seção 1.6 dos requisitos:**
+  - ADR-0005 aceita, sem `unaccent`;
+  - permissões no código;
+  - IP fora da sessão, com o rate limit mantido;
+  - `security_events` com IP, retenção a confirmar na DP-11;
+  - `identity` renomeado para `auth`, com imports só pela interface pública;
+  - validação feita por quem recebe a entrada;
+  - 404 × 403 × reautenticação na seção 4;
+  - Titular e Responsável separados no glossário.
+- **Sinais:**
+  - fato conferido no código do Better Auth 1.7.15: o `disableIpTracking` desliga também o rate limit, e o gancho `session.create.before` limpa o IP. Isso refez a verificação 3 da 10.4 e criou a verificação 8;
+  - A8 a A10, na seção "Atritos do harness";
+  - a S1 usou 31% de uma janela de 5 h nova e 5 pontos da semana, tudo em Opus, com 97% de acerto de cache.
+- **Cota:** 5 h não medido → 31% · semana 31% → 36%.

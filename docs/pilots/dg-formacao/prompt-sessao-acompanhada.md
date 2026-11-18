@@ -7,7 +7,7 @@ O código do projeto e os artefatos do playbook (glossário, ADRs, specs e ticke
 <contexto>
 Leia antes de responder, nesta ordem, e afirme só o que leu:
 1. A memória automática deste diretório (MEMORY.md e ibav-course-platform.md), com as decisões até 17/11/2026.
-2. Os requisitos em `~\Downloads\Plataforma de Cursos Evangélicos — Requisitos v2.3.md`: seções 1.1, 1.5, 9.1, 9.13 e 10.4. O resto, só quando a tarefa pedir. Depois da Sessão 0, a fonte passa a ser a cópia em `F:\Projetos\dg-formacao\docs\requisitos\requisitos-v2.3.md`, e a de Downloads fica obsoleta.
+2. Os requisitos em `~\Downloads\Plataforma de Cursos Evangélicos — Requisitos v2.3.md`: seções 1.1, 1.5, 9.1, 9.13 e 10.4. O resto, só quando a tarefa pedir. Depois da Sessão 1, a fonte passa a ser `F:\Projetos\dg-formacao\docs\requisitos\requisitos.md` (v2.4, caminho fixo, com a versão dentro do documento), e a de Downloads fica obsoleta.
 3. `docs/playbook.md`: fases F1 a F8, portões, Definition of Ready e de Done, prompts F3 e F8.
 4. Em `F:\Projetos\dg-formacao`:
    - as skills `data-layer` e `auth-identity`, inclusive as seções "Unverified";
@@ -79,7 +79,9 @@ Passos:
 2. ...
 Já decidido e vale aqui: <decisões que a sessão não deve reabrir>
 Fora de escopo: <o que fica para outra sessão>
-Ao terminar: rode /relatorio-sessao.
+Ao terminar: peça ao usuário para rodar /relatorio-sessao (a skill só abre pelo comando).
+
+Marque com "(no PC)" o passo que exige o computador, como os comandos que só rodam no terminal local ou um push feito pelo usuário. O usuário acompanha as sessões pelo celular.
 </formato_abertura>
 
 <primeira_tarefa>
