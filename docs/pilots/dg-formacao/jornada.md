@@ -97,8 +97,8 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | # | Atrito | Evidência | Estado |
 | --- | --- | --- | --- |
 | A1 | O `ci.yml` do template não declara `permissions` e fixa as actions por tag. Isso conflita com a RNF-SEG-13 e é boa prática para qualquer projeto | `templates/project/.github/workflows/ci.yml` | Parcial: `permissions: contents: read` entrou no template (ac5a083). Fixar por SHA vira ticket do R0, junto com o Dependabot |
-| A2 | O `.claude/settings.json` do projeto só carrega no início da sessão. Na primeira sessão de um projeto novo, os plugins do usuário (inclusive o SessionStart do superpowers) ficam ligados e os hooks ficam desligados até reiniciar. O playbook não fala disso | `docs/playbook.md:7-8` | Aberto |
-| A3 | O playbook não tem uma fase de bootstrap. O que o piloto fez existe só no histórico do git e na memória | `docs/playbook.md` (seções "Antes de começar" e "Fases") | Aberto; o prompt da S0 é o rascunho |
+| A2 | O `.claude/settings.json` do projeto só carrega no início da sessão. Na primeira sessão de um projeto novo, os plugins do usuário (inclusive o SessionStart do superpowers) ficam ligados e os hooks ficam desligados até reiniciar. O playbook não fala disso | `docs/playbook.md:7-8`; relatório da S0, passo 9 | Confirmado: a S0 parou no passo 9 e virou duas sessões (S0 e S0b) |
+| A3 | O playbook não tem uma fase de bootstrap. O que o piloto fez existe só no histórico do git e na memória | `docs/playbook.md` (seções "Antes de começar" e "Fases"); na S0, `vitest.config.mts` e o bloco `# playwright` do `.gitignore`, copiados do piloto | Aberto, 2 ocorrências. Copiar do piloto trouxe o `vite-tsconfig-paths`, que o Vite 8 dispensa, e um `*.tsbuildinfo` duplicado. O passo do `partialPrefetching` também era desnecessário, porque o create-next-app 16.4 já gera essa opção. Candidato: o template passa a trazer `vitest.config.mts`, `playwright.config.ts`, os testes de fumaça e as linhas do Playwright no `gitignore.append`, e o playbook ganha uma seção de bootstrap |
 
 ## Cota por fase
 
@@ -106,6 +106,7 @@ Uma linha por sessão, copiada do relatório.
 
 | Sessão | Fase | Modelo | Janela de 5 h (antes → depois) | Semana (antes → depois) |
 | --- | --- | --- | --- | --- |
+| S0 | Bootstrap, passos 1 a 8 | Sonnet | não medido | não medido |
 
 ## Métricas por spec
 
@@ -149,3 +150,26 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
 - **Conferência:** não se aplica, porque não houve relatório.
 - **Sinais:** A1 a A3, na seção "Atritos do harness".
 - **Cota:** não medido.
+
+### 17/11/2026 · Sessão 0 · Bootstrap · R0 (preparação) · sem spec nem ticket
+
+- **Resumo:**
+  - os passos 1 a 8 foram concluídos e verificados, em dois commits locais na `main` (3c7a961 e e718a81);
+  - o reinício (passo 9) e o GitHub (passo 10) ficaram para a S0b, porque o reinício depende do usuário.
+- **Portão:** o da S0 continua aberto e fecha na S0b. A sessão acompanhada conferiu o estado do projeto: dois commits, `git status` limpo, nenhum remoto, `next` 16.4.6, nada de `.env*`, `node_modules` ou `.next` rastreado, seção "Privacy and security" com 9 itens e os 4 IDs. Nenhum dado pessoal nos arquivos rastreados.
+- **Conferência:**
+  - `format:check`, `lint`, `typecheck`, `test`, `build` e `test:e2e` verdes, com comando e saída → ok;
+  - o lint barra `dangerouslySetInnerHTML` → ok;
+  - cópia dos requisitos com o mesmo SHA-256 → ok;
+  - template aplicado, com 7 skills e `permissions: contents: read` → ok;
+  - implementer e `CODING_STANDARDS.md` ajustados → ok;
+  - smoke test dos hooks, 11 de 11 → ok;
+  - `/plugin` e `/hooks` depois do reinício → falta;
+  - repositório, segurança, labels, setup do Matt, CI verde, CodeQL e ruleset → falta;
+  - `ASSUMPTION:` e findings → não se aplica.
+- **Sinais:**
+  - A2 confirmado: a S0 teve de ser dividida;
+  - A3 com 2 ocorrências: o `vite-tsconfig-paths` e o bloco `# playwright` do `.gitignore` vieram do piloto;
+  - o teste de fumaça importa por caminho relativo, então nenhum teste exercita o alias `@/`. A S0b corrige isso junto com a troca do plugin;
+  - nenhum item "Unverified" resolvido.
+- **Cota:** não medido; o relatório deixou o campo para o usuário preencher.
