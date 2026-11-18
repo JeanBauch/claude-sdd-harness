@@ -51,7 +51,7 @@ O F4 só volta quando a fatia trouxer uma decisão difícil de reverter, que vir
 
 | Fatia | Antes de começar | Objetivo (seção 10.4) | Saída da fatia |
 | --- | --- | --- | --- |
-| R1 Vitrine | Skill `ui-design-system`, com evals | Design system com os tokens do DESIGN.md, home, catálogo, página do curso, páginas institucionais, carga por CSV, SEO e CSP | CSP e cabeçalhos verificados por teste (RNF-SEG-11); nenhum recurso de terceiros no front (RPV-15); E2E do catálogo verde |
+| R1 Vitrine | Skill `ui-design-system`, com evals · grilling da demanda #2 (cursos por liberação), depois da retro do R0 e antes da R1.1 | Design system com os tokens do DESIGN.md, home, catálogo, página do curso, páginas institucionais, carga por CSV, SEO e CSP | CSP e cabeçalhos verificados por teste (RNF-SEG-11); nenhum recurso de terceiros no front (RPV-15); E2E do catálogo verde |
 | R2 Aprender | Skill `integrations`, com evals | Matrícula, aula em vídeo com `VideoPlayer`, aula em PDF, `/media/{id}`, conclusão, progresso, Meus cursos e "Continue assistindo" | E2E de assistir e concluir verde (RNF-QUA-01); testes de contrato do `VideoPlayer` |
 | R3 Família | — | Perfis, "Quem está assistindo?", perfil infantil e escopo do catálogo, PIN do titular, acompanhamento do responsável e consentimentos | Testes da PROFILES.md verdes: escopo infantil em todas as rotas e bloqueio do PIN |
 | R4 Backoffice | — | Formulários, editor de currículo, envio ao R2 com variantes de imagem, revisão, equipe, autores e métricas | E2E de publicar curso verde; uma linha de `audit_log` por escrita da equipe |
@@ -223,3 +223,17 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - `supabase` e `supabase-postgres-best-practices`: dependem do A7.
 - **Mantida por juízo:** `deep-research`. Ela se sobrepõe à `research` do Matt, mas nada mostra que não será usada.
 - **Cota:** a medir. Na próxima leitura do `/usage`, comparar a linha "Turn off skills you don't use".
+
+### 18/11/2026 · Sessão acompanhada 1 · Demanda nova: cursos por liberação (#2)
+
+- **Resumo:** o usuário trouxe uma demanda que não está nos requisitos. As contas de equipe liberam cursos específicos para pessoas específicas, por exemplo o curso para casamento e o onboarding do ministério. A demanda virou a issue #2, com `needs-triage` e as 6 perguntas do grilling.
+- **Decisão do usuário, com o motivo:** nem entrar na S1, nem esperar o sistema pronto. Vai num grilling próprio, depois da retro do R0 e antes da R1.1.
+  - A S1 estava perto do G1, e a demanda traz perguntas de produto e jurídicas.
+  - O R0 não cria tabela de curso (seção 10.4).
+  - Decidir depois da R1 obrigaria a refazer o catálogo em cache, a matrícula, os perfis e o backoffice.
+- **Como retomar:**
+  - o ritual de cada sessão acompanhada vê a #2 no `gh issue list`;
+  - o mapa da R1 tem a linha "Antes de começar";
+  - quando o R0 fechar, a sessão acompanhada escreve o prompt do `grill-with-docs` sobre a #2, partindo das respostas que o usuário deixar em comentários na issue.
+- **Levar ao jurídico, junto com o DP-04:** a lista de pessoas liberadas pode revelar o papel na igreja ou a intenção de casar (seção 7.2, dado sensível).
+- **Sinais:** a `/ship-ticket` só propõe `type:ticket` com spec `ready-for-agent`, então a #2 não entra no ciclo por engano.
