@@ -201,3 +201,25 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - o `/usage` atribui 17% do uso à lista de skills, cerca de 12 mil tokens por requisição, e 75% a conversas longas;
   - o atrito "branch desprotegida entre os passos 3 e 8" do relatório não é atrito: o ruleset entrou por último de propósito, porque a regra de PR barraria os commits diretos na `main`.
 - **Cota:** 5 h de 5% → 12% · semana de 30% → 31%, incluindo a sessão acompanhada.
+
+### 17/11/2026 · Sessão acompanhada 1 · Skills sem uso desligadas
+
+- **Resumo:** o `/usage` atribuía 17% do uso à lista de skills. A pedido do usuário, 12 skills foram desligadas com `skillOverrides: "off"` no `settings.json` do usuário: só as sem uso previsto nos requisitos e no harness. Prova: uma sessão de teste em Haiku. A lista de skills gravada na transcrição não tem nenhuma das 12, e as mantidas aparecem. O `skillOverrides` com o nome puro vale também para as skills sincronizadas do claude.ai.
+- **Desligadas, com o motivo:**
+  - `built-in-browser`, `chrome-browser` e `computer-use`: a jornada roda no VS Code, sem o app desktop nem a extensão do Chrome, e o plugin do Playwright cobre o navegador;
+  - `google-workspace` e `pptx`: os requisitos não citam Google Docs, Sheets, Drive nem apresentações;
+  - `morning` e `import-memory`: sem relação com o projeto nem com o harness;
+  - `find-skills`: o harness escreve as próprias skills e desliga as de terceiros de propósito;
+  - `claude-api`: o produto não tem recurso de IA, e o harness usa só o Claude Code;
+  - `schedule`: o job periódico do projeto roda no GitHub Actions (seção 9.13);
+  - `keybindings-help`: sem relação com a jornada;
+  - `init`: o `apply-template` já escreve o `CLAUDE.md`.
+- **Mantidas por evidência:**
+  - `xlsx`: carga por planilha/CSV (RF-ADM-08, ADR-001);
+  - `pdf`: aulas em PDF (R2);
+  - `docx` e `docs`: RIPD (RPV-11) e runbooks (R5);
+  - `dataviz`: painéis (RNF-OBS-08, RF-ADM-12);
+  - `skill-creator`: evals da R0.e;
+  - `supabase` e `supabase-postgres-best-practices`: dependem do A7.
+- **Mantida por juízo:** `deep-research`. Ela se sobrepõe à `research` do Matt, mas nada mostra que não será usada.
+- **Cota:** a medir. Na próxima leitura do `/usage`, comparar a linha "Turn off skills you don't use".
