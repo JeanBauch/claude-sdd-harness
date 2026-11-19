@@ -24,14 +24,18 @@ Quem abre cada portão é o usuário. Cada sessão do projeto termina com `/rela
 
 ### R0 Esqueleto e operação
 
+Desde a S2, o R0 tem duas specs: a **A** (#3, identidade e dados), que fecha só com evidência local e do CI, e a **B** (operação e cadeia de suprimentos). A B recebe os critérios que dependem dos provedores reais.
+
 | Sessão | Fase | Objetivo | Portão |
 | --- | --- | --- | --- |
-| R0.1 | F2 + F3 | Escrever a spec do R0 com `to-spec`. As verificações da seção 10.4 e os itens "Unverified" das skills entram como critérios de aceite. Depois, rodar o prompt F3 | G2: zero lacunas → `ready-for-agent` |
-| R0.2 | F5 | `to-tickets #<spec>`: sub-issues com `blocked-by` | G4: granularidade e dependências aprovadas; `model:opus` nos tickets de autenticação, transação, backup e migration |
-| R0.3 em diante | F6 + F7, uma sessão por ticket | `/ship-ticket` | Definition of Done completa e merge feito pelo usuário |
+| R0.1 | F2 + F3 da spec A | Spec #3 com as histórias A1 a A6, os 5 seams de teste e os itens U1 a U10 como critérios; depois, o prompt F3 | G2: zero lacunas → `ready-for-agent` |
+| R0.1d | Desvios da spec A | PR numa branch `docs/`, fora da `/ship-ticket`: requisitos v2.5, glossário e skill `auth-identity`, conforme a seção "Desvios dos requisitos" da #3 | Merge do usuário, antes do F5 |
+| R0.2 | F5 da spec A | `to-tickets #3`: sub-issues com `blocked-by` | G4: granularidade e dependências aprovadas; `model:opus` nos tickets de autenticação, transação, backup e migration |
+| R0.3 em diante | F6 + F7 da spec A, uma sessão por ticket | `/ship-ticket` | Definition of Done completa e merge feito pelo usuário |
+| R0.B | Spec B: F2 + F3, F5, F6 + F7 | B1 a B6. Começa depois do G2 da A; a B1 (contas nos provedores, só do usuário) corre em paralelo aos tickets da A | G2 e G4 da B; merges |
 | R0.e | Avaliação das skills | Rodar os cenários de `docs/agents/skill-evals/` sem e com cada skill | Placar registrado no README das evals; regra que não muda o placar sai da skill |
 | R0.s | Skill `testing-stack` | Escrever a skill e as evals dela a partir dos testes que o R0 criou | Evals escritas e rodadas |
-| R0.r | F8 Retro | `retro-evidence.mjs` + `/mattpocock-skills:retro` | Cada candidato aprovado ou rejeitado; spec fechada |
+| R0.r | F8 Retro, uma por spec | `retro-evidence.mjs` + `/mattpocock-skills:retro` | Cada candidato aprovado ou rejeitado; spec fechada |
 
 Saída do R0:
 - as 8 verificações da seção 10.4 respondidas (eram 7 na v2.3; uma resposta negativa volta aos requisitos);
@@ -51,7 +55,7 @@ O F4 só volta quando a fatia trouxer uma decisão difícil de reverter, que vir
 
 | Fatia | Antes de começar | Objetivo (seção 10.4) | Saída da fatia |
 | --- | --- | --- | --- |
-| R1 Vitrine | Skill `ui-design-system`, com evals · grilling da demanda #2 (cursos por liberação), depois da retro do R0 e antes da R1.1 | Design system com os tokens do DESIGN.md, home, catálogo, página do curso, páginas institucionais, carga por CSV, SEO e CSP | CSP e cabeçalhos verificados por teste (RNF-SEG-11); nenhum recurso de terceiros no front (RPV-15); E2E do catálogo verde |
+| R1 Vitrine | Skill `ui-design-system`, com evals · grilling da demanda #2 (cursos por liberação), depois das retros das duas specs do R0 e antes da R1.1 | Design system com os tokens do DESIGN.md, home, catálogo, página do curso, páginas institucionais, carga por CSV, SEO e CSP | CSP e cabeçalhos verificados por teste (RNF-SEG-11); nenhum recurso de terceiros no front (RPV-15); E2E do catálogo verde |
 | R2 Aprender | Skill `integrations`, com evals | Matrícula, aula em vídeo com `VideoPlayer`, aula em PDF, `/media/{id}`, conclusão, progresso, Meus cursos e "Continue assistindo" | E2E de assistir e concluir verde (RNF-QUA-01); testes de contrato do `VideoPlayer` |
 | R3 Família | — | Perfis, "Quem está assistindo?", perfil infantil e escopo do catálogo, PIN do titular, acompanhamento do responsável e consentimentos | Testes da PROFILES.md verdes: escopo infantil em todas as rotas e bloqueio do PIN |
 | R4 Backoffice | — | Formulários, editor de currículo, envio ao R2 com variantes de imagem, revisão, equipe, autores e métricas | E2E de publicar curso verde; uma linha de `audit_log` por escrita da equipe |
@@ -59,19 +63,20 @@ O F4 só volta quando a fatia trouxer uma decisão difícil de reverter, que vir
 
 ## Itens "Unverified" das skills
 
-Cada item vira critério de um ticket do R0. Quando o item se confirmar, a linha correspondente sai da skill; se não se confirmar, a regra da skill muda.
+Cada item vira critério de um ticket do R0. Quando o item se confirmar, a linha correspondente sai da skill; se não se confirmar, a regra da skill muda. A coluna "Critério" aponta o critério da spec #3; o ticket entra no F5.
 
-| # | Skill | Item a confirmar | Ticket | Resultado |
+| # | Skill | Item a confirmar | Critério | Resultado |
 | --- | --- | --- | --- | --- |
-| U1 | data-layer | O drizzle-kit emite `.op('extensions.gin_trgm_ops')` no SQL do índice exatamente como escrito | — | — |
-| U2 | data-layer | O tipo de coluna que o CLI do Better Auth gera para `user.id` quando `generateId` devolve UUID | — | — |
-| U3 | auth-identity | `schemaName: 'app'` no adapter põe todas as tabelas do Better Auth em `app`, inclusive os campos do plugin admin e `rateLimit` | — | — |
-| U4 | auth-identity | O plugin admin guarda vários papéis separados por vírgula em `role` e respeita todos | — | — |
-| U5 | auth-identity | O pedido de reset de senha devolve a mesma resposta para e-mail desconhecido | — | — |
-| U6 | auth-identity | `after()` funciona dentro dos callbacks de e-mail do Better Auth | — | — |
-| U7 | auth-identity | `databaseHooks.user.create.after` roda na requisição do cadastro, de modo que perfil principal e consentimentos podem ser gravados ali | — | — |
-| U8 | auth-identity | Um after-hook em `/sign-in/email` alcança e revoga a sessão que acabou de criar (STAFF.md) | — | — |
-| U9 | auth-identity | Os nomes de rota do rate limit na 1.7: `/sign-in/email`, `/sign-up/email`, `/request-password-reset` e `/send-verification-email` | — | — |
+| U1 | data-layer | O drizzle-kit emite `.op('extensions.gin_trgm_ops')` no SQL do índice exatamente como escrito | #3 A1.9 (schema descartável, fora do commit; o índice real entra na R1) | — |
+| U2 | data-layer | O tipo de coluna que o CLI do Better Auth gera para `user.id` quando `generateId` devolve UUID | #3 A2.6 | — |
+| U3 | auth-identity | `schemaName: 'app'` no adapter põe todas as tabelas do Better Auth em `app`, inclusive os campos do plugin admin e `rateLimit` | #3 A2.5 | — |
+| U4 | auth-identity | O plugin admin guarda vários papéis separados por vírgula em `role` e respeita todos | #3 A4.8 | — |
+| U5 | auth-identity | O pedido de reset de senha devolve a mesma resposta para e-mail desconhecido | #3 A3.5 | — |
+| U6 | auth-identity | `after()` funciona dentro dos callbacks de e-mail do Better Auth | #3 A3.12 (seam 5, contra `next start`) | — |
+| U7 | auth-identity | `databaseHooks.user.create.after` roda na requisição do cadastro, de modo que perfil principal e consentimentos podem ser gravados ali | #3 A2.1 | — |
+| U8 | auth-identity | Um after-hook em `/sign-in/email` alcança e revoga a sessão que acabou de criar (STAFF.md) | #3 A4.11 | — |
+| U9 | auth-identity | Os nomes de rota do rate limit na 1.7: `/sign-in/email`, `/sign-up/email`, `/request-password-reset` e `/send-verification-email` | #3 A2.11 e A3.8 | — |
+| U10 | auth-identity (da S2) | Com `transaction: true` no `drizzleAdapter`, o gancho `after` roda depois do commit e é pulado no rollback. A documentação do Better Auth 1.7.15 já afirma isso; o teste confirma no código | #3 A2.12 | — |
 
 U3 e U4 se sobrepõem ao item 3 das verificações do R0 (seção 10.4). A spec do R0 trata os dois juntos.
 
@@ -105,7 +110,11 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A8 | O `RBAC.md` da skill `next-architecture` manda buscar a regra 404 × 403 "na ADR do projeto". Pelo critério do harness, só decisão difícil de reverter vira ADR, e a S1 pôs essa regra na seção 4 dos requisitos | `templates/project/.claude/skills/next-architecture/RBAC.md`; relatório da S1 | Aberto. Mitigado no R0: a spec cita a seção 4 nos critérios de autorização. Candidato: o `RBAC.md` aponta para "a decisão do projeto (ADR ou requisitos)" |
 | A9 | O formato de abertura termina com "rode /relatorio-sessao", mas a skill tem `disable-model-invocation` e só o usuário consegue rodá-la | `docs/pilots/dg-formacao/prompt-sessao-acompanhada.md`; relatório da S1 | Corrigido no formato: o prompt pede para a sessão avisar o usuário |
 | A10 | A skill `relatorio-sessao` do projeto manda preencher a cota "com /quota", mas o valor certo vem do `/usage`, como o playbook diz | `.claude/skills/relatorio-sessao` do projeto; relatório da S1 | Aberto, cosmético. Vai para a branch da retro do R0 |
-| A7 | A skill `anthropic-skills:supabase`, sincronizada do claude.ai, aparece nas sessões do projeto, embora o template desligue o plugin `supabase@synced`. A descrição dela pede uso em "ANY task involving Supabase", o que concorre com a `data-layer` no R0 | transcrição da S0b (lista de skills) | Aberto. Decidir na R0.1: desligar por `skillOverrides` no `.claude/settings.json` do projeto, ou medir nas evals da R0.e |
+| A7 | A skill `anthropic-skills:supabase`, sincronizada do claude.ai, aparece nas sessões do projeto, embora o template desligue o plugin `supabase@synced`. A descrição dela pede uso em "ANY task involving Supabase", o que concorre com a `data-layer` no R0 | transcrição da S0b (lista de skills) | Parcial. A S2 desligou `supabase` e `supabase-postgres-best-practices` no `.claude/settings.local.json`, que fica fora do git. A documentação não diz se o `skillOverrides` de arquivos diferentes se soma ou se substitui. Conferir na lista de skills da S3: as duas fora, e o `to-spec` avulso e as 12 do usuário ainda fora. Candidato: o template desliga as duas no `settings.json`, onde já desliga o `to-spec` avulso |
+| A11 | A `to-spec` do Matt manda aplicar `ready-for-agent` ao publicar, mas o playbook só aplica o label no G2. A regra do projeto venceu | relatório da S2 | Aberto, 1 ocorrência. Candidato: o playbook avisa, no F2, que o label do `to-spec` fica para o G2 |
+| A12 | O playbook não tem um passo para as correções de requisitos e de skills que aparecem no F3. O `protect-paths` bloqueia `.claude/**` nas branches `feat/*`, então um ticket não consegue corrigir a skill que o implementer pré-carrega | relatório da S2; #3, seção "Desvios dos requisitos" | Mitigado na spec A: um PR `docs/` entre o G2 e o F5 (R0.1d). Candidato: o playbook ganha esse passo |
+| A13 | `.env.example`: o `CLAUDE.md` do template proíbe editar `.env*`, o `protect-paths` libera e pede para editar o `.env.example`, e o `.env*` do `.gitignore` gerado pelo create-next-app ignora o `.env.example` | `templates/project/CLAUDE.md:21`; `templates/project/.claude/hooks/protect-paths.mjs:12-13`; `.gitignore:34` do projeto; lacuna 9 da #3 | Aberto. Depois da decisão da lacuna 9 na S3, o template acompanha: exceção no `CLAUDE.md` e `!.env.example` no `gitignore.append` |
+| A14 | A skill `auth-identity` afirmava como fato coisas que a spec teve de desfazer: o `after()` no callback de e-mail e o convite pelo plugin admin. A linha do U7 (`SKILL.md:53`) levava a supor que o gancho `after` grava na mesma transação da conta | `auth-identity/SKILL.md:53` e `STAFF.md` do projeto; lacunas 1 e 2 da #3 | Corrigido na spec; a skill muda no PR da R0.1d. Para a retro: rever como as skills de projeto separam o que é fato conferido do que é suposição |
 
 ## Cota por fase
 
@@ -116,6 +125,7 @@ Uma linha por sessão, copiada do relatório.
 | S0 | Bootstrap, passos 1 a 8 | Sonnet | não medido | não medido |
 | S0b | Bootstrap, reinício e GitHub | Sonnet | 5% → 12% | 30% → 31% |
 | S1 | F1 + F4 | Opus | não medido → 31% (janela nova) | 31% → 36% |
+| S2 | F2 + F3 da spec A | Opus | não medido → 48% (22,7%/h nas últimas 2 h) | 36% (fim da S1) → 42% |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -123,16 +133,16 @@ O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhad
 
 As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada fatia.
 
-| Métrica | R0 | R1 | R2 | R3 | R4 | R5 |
-| --- | --- | --- | --- | --- | --- | --- |
-| Cota usada (5 h / semana) | | | | | | |
-| Rodadas de grilling até o G1 | | | | | | |
-| Lacunas no F3 | | | | | | |
-| Tickets / reabertos | | | | | | |
-| Findings (verdadeiros / rejeitados) | | | | | | |
-| `ASSUMPTION:` que chegaram ao PR | | | | | | |
-| Escaladas Sonnet → Opus | | | | | | |
-| Bloqueios do verify-gate (úteis / ruído) | | | | | | |
+| Métrica | R0-A | R0-B | R1 | R2 | R3 | R4 | R5 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Cota usada (5 h / semana) | | | | | | | |
+| Rodadas de grilling até o G1 | | | | | | | |
+| Lacunas no F3 | 12 | | | | | | |
+| Tickets / reabertos | | | | | | | |
+| Findings (verdadeiros / rejeitados) | | | | | | | |
+| `ASSUMPTION:` que chegaram ao PR | | | | | | | |
+| Escaladas Sonnet → Opus | | | | | | | |
+| Bloqueios do verify-gate (úteis / ruído) | | | | | | | |
 
 ## Entradas
 
@@ -277,3 +287,36 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
 - **Harness:** todos os commits publicados. O ritual de início passa a listar também os PRs abertos e os commits do harness sem push.
 - **Próximo passo:** S2, F2 + F3 do R0, com o prompt já entregue. O passo 2 dele desliga as skills sincronizadas de Supabase no projeto (A7).
 - **Pendente na próxima sessão acompanhada:** receber o relatório da S2. Manter a #2 no radar: grilling depois da retro do R0, antes da R1.1.
+
+### 19/11/2026 · Sessão 2 · F2 Spec + F3 Lacunas · R0 (spec A) · #3
+
+- **Resumo:**
+  - o R0 virou duas specs, porque o escopo tinha 12 histórias. A spec A (identidade e dados) foi publicada como #3; a B (operação e cadeia de suprimentos) fica para uma sessão própria;
+  - o F3 achou 12 lacunas. As lacunas 1 a 5 foram fechadas e entraram no corpo da #3; as lacunas 6 a 12 estão num comentário da #3. A sessão parou para economizar contexto e cota.
+- **Portão:** G2 pendente. Faltam as lacunas 6 a 12, e a #3 continua com `needs-triage`.
+- **Conferência:**
+  - issue `type:spec`, sem `ready-for-agent` → ok;
+  - critérios no formato Dado/Quando/Então e requisitos não funcionais (NF-1 a NF-3) → ok;
+  - V1 a V8 e U1 a U9 no corpo da #3 → ok. A sessão acompanhada conferiu a tabela U1 a U10 → critério;
+  - lacunas 6 a 12 no comentário → ok (1 comentário, 7 seções);
+  - nenhum e-mail ou telefone no corpo da #3 → ok;
+  - "Perguntas em aberto: nenhuma" → falta, depende do G2;
+  - commits, reviews e `ASSUMPTION:` → não se aplica.
+- **Decisões do usuário, com o motivo** (o detalhe está na #3):
+  - R0 em duas specs, e a A fecha só com evidência local e do CI. Os critérios que dependem da Vercel ou do Supabase real vão para a B3, e o agendamento do job diário, para a B. Motivo: tamanho, e a A não fica esperando a B;
+  - a S2 escreveu só a spec A. Motivo: o F3 da A mudaria a fronteira com a B, como mudou;
+  - 5 seams de teste. O U1 é conferido por comando num schema descartável, porque o R0 não cria `courses`;
+  - `APP_ENV` obrigatória e sem valor padrão. Motivo: `NODE_ENV` é `production` no `next start` do E2E, e a Vercel define `CI=1` no build;
+  - convite numa transação do Drizzle, com perfil e auditoria. Motivo: uma conta de equipe sem auditoria é o caso que a auditoria existe para evitar;
+  - aceite da equipe na tela de definição de senha. Motivo: a equipe assiste aulas, e o histórico de estudo é o dado da RPV-07;
+  - `consents` sem `ip_hash` e com três tipos de documento. A pergunta sobre o IP como prova vai ao jurídico na DP-04;
+  - a redefinição de senha funciona com o e-mail não verificado e o marca como verificado. Motivo: o convite e o titular ficariam presos;
+  - bloqueio progressivo por conta, conferido antes da senha. Motivo: a 9.12.3 conta com ele no lugar do MFA da equipe;
+  - os desvios dos requisitos e da skill vão para um PR `docs/` entre o G2 e o F5 (R0.1d).
+- **Sinais:**
+  - pela documentação do Better Auth 1.7.15, o gancho `after` roda depois do commit. Isso refez a lacuna 1 e criou o U10 (A14);
+  - os itens "Unverified" subiram de 9 para 10, todos em autenticação e dados; nenhum foi resolvido;
+  - 12 lacunas só na spec A, contra 11 no spec inteiro do piloto;
+  - A7 parcial, A11 a A14 novos, na seção "Atritos do harness";
+  - cota: a S2 e esta sessão acompanhada usaram 48% da janela de 5 h, a 22,7% por hora.
+- **Cota:** 5 h não medido → 48% · semana 36% → 42%, incluindo a sessão acompanhada.
