@@ -270,3 +270,10 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - A8 a A10, na seção "Atritos do harness";
   - a S1 usou 31% de uma janela de 5 h nova e 5 pontos da semana, tudo em Opus, com 97% de acerto de cache.
 - **Cota:** 5 h não medido → 31% · semana 31% → 36%.
+
+### 19/11/2026 · Sessão acompanhada 1 · Encerramento
+
+- **Portões:** o usuário fez o merge do PR #1 em 18/11, a última decisão da S1, e com ele aceitou o G1 e o G3. Se alguma pergunta do grilling ficou aberta, ela entra na S2.
+- **Harness:** todos os commits publicados. O ritual de início passa a listar também os PRs abertos e os commits do harness sem push.
+- **Próximo passo:** S2, F2 + F3 do R0, com o prompt já entregue. O passo 2 dele desliga as skills sincronizadas de Supabase no projeto (A7).
+- **Pendente na próxima sessão acompanhada:** receber o relatório da S2. Manter a #2 no radar: grilling depois da retro do R0, antes da R1.1.
