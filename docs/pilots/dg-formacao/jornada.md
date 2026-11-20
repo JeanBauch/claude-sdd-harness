@@ -77,6 +77,8 @@ Cada item vira critério de um ticket do R0. Quando o item se confirmar, a linha
 | U8 | auth-identity | Um after-hook em `/sign-in/email` alcança e revoga a sessão que acabou de criar (STAFF.md) | #3 A4.11 | — |
 | U9 | auth-identity | Os nomes de rota do rate limit na 1.7: `/sign-in/email`, `/sign-up/email`, `/request-password-reset` e `/send-verification-email` | #3 A2.11 e A3.8 | — |
 | U10 | auth-identity (da S2) | Com `transaction: true` no `drizzleAdapter`, o gancho `after` roda depois do commit e é pulado no rollback. A documentação do Better Auth 1.7.15 já afirma isso; o teste confirma no código | #3 A2.12 | — |
+| U11 | auth-identity (da S3) | Com `disabledPaths`, a rota HTTP responde 404, mas a chamada pelo servidor (`auth.api`) continua funcionando. Na main do Better Auth, o `disabledPaths` só é conferido no `onRequest` do roteador HTTP | #3, seam 1 (a A4.8 depende dele) | — |
+| U12 | auth-identity (da S3) | Com `storage: 'database'`, o Better Auth não apaga as linhas vencidas de `rate_limits`. As notas da 1.5 citam limpeza automática só no armazenamento em memória; o PR traz o trecho do código da 1.7.15 | #3 A2.21 (limpeza própria no job diário) | — |
 
 U3 e U4 se sobrepõem ao item 3 das verificações do R0 (seção 10.4). A spec do R0 trata os dois juntos.
 
@@ -95,6 +97,21 @@ U3 e U4 se sobrepõem ao item 3 das verificações do R0 (seção 10.4). A spec 
 - **Conflito nos requisitos:** a seção 9.5 e a CONFIG.md da skill `auth-identity` mantêm o IP na sessão, porque o rate limit depende dele. Já o item 3 da seção 10.4 pede para verificar que "o registro de IP na sessão pode ser desligado". Decidir qual vale e corrigir o outro lado.
 - **A decidir:** a ADR-005 (proposta) e os itens "Proposto" da seção 1.5 (permissões no código, refinamentos técnicos e as fatias da 10.4).
 
+## Levar à spec B e à R1
+
+Saiu da análise de registros, auditoria e cotas gratuitas que a sessão acompanhada fez a pedido do usuário (entrada da S3). Os itens da spec A já estão na #3.
+
+- **Backup incremental das tabelas de registro** (`security_events`, `audit_log` e `analytics_events`): o dump noturno exclui os dados delas, um passo exporta só as linhas do dia anterior, e um dump completo roda uma vez por semana. Motivo: o `pg_dump` passa pelo pooler sem compressão, e 100 MB de dados custam cerca de 3 GB dos 5 GB de egress do mês. Decisão do usuário pendente.
+- **Relatório de capacidade:** acompanhar a média diária do tamanho do banco no ciclo, que é o que a cota de 500 MB mede (a restrição de uso justo dura até a virada do ciclo); o tamanho de cada tabela contra um orçamento; o egress estimado pelo volume sem compressão; e, no Axiom, a cota de consulta (10 GB-horas por mês) e o número de campos (256 por dataset), no lugar da ingestão.
+- **B1, conferências do usuário:** uma regra de rate limit do firewall da Vercel no login (no Hobby, 1 regra, por IP, com janela de 10 s a 10 min), mais folgada que a do Better Auth; se a regra aceita prefixo de caminho; se requisições bloqueadas contam na cota; spike protection e limite por DSN no plano Developer do Sentry; Standard Protection ligada; parte 1 do script de papéis em staging e produção.
+- **Sentry:** nenhum resultado esperado vira erro (4xx, validação, rate limit, falha de login); filtros de entrada; `allowUrls` só com o domínio; o adaptador do aviso de transbordo do registro de segurança (B4).
+- **Axiom:** logger com lista fechada de chaves; um dataset para logs e outro para traces, com o campo `env`; poucos monitores, a cada 5 min ou mais.
+- **B3:** parte 2 do script de papéis depois das migrations; conferir se o pooler do Supabase aceita os papéis próprios.
+- **Restauração (9.12.9 e 9.12.11):** o diário das migrations fica no schema `app` e entra no dump. Rodar a primeira migration antes do `pg_restore` pode colidir com ele; o ensaio de restauração confere.
+- **Job diário:** a limpeza própria das linhas vencidas do rate limit (A2.21) e a do registro de segurança.
+- **F3 da spec B:** o prompt leva a categoria "capacidade e cotas" (A18).
+- **R1:** o `search_misses` repete o padrão do registro de segurança (visitante anônimo, termo aleatório). A spec da R1 traz tamanho máximo do termo e teto de termos por dia.
+
 ## Atritos do harness
 
 Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a retro de alguma spec decidir.
@@ -110,11 +127,15 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A8 | O `RBAC.md` da skill `next-architecture` manda buscar a regra 404 × 403 "na ADR do projeto". Pelo critério do harness, só decisão difícil de reverter vira ADR, e a S1 pôs essa regra na seção 4 dos requisitos | `templates/project/.claude/skills/next-architecture/RBAC.md`; relatório da S1 | Aberto. Mitigado no R0: a spec cita a seção 4 nos critérios de autorização. Candidato: o `RBAC.md` aponta para "a decisão do projeto (ADR ou requisitos)" |
 | A9 | O formato de abertura termina com "rode /relatorio-sessao", mas a skill tem `disable-model-invocation` e só o usuário consegue rodá-la | `docs/pilots/dg-formacao/prompt-sessao-acompanhada.md`; relatório da S1 | Corrigido no formato: o prompt pede para a sessão avisar o usuário |
 | A10 | A skill `relatorio-sessao` do projeto manda preencher a cota "com /quota", mas o valor certo vem do `/usage`, como o playbook diz | `.claude/skills/relatorio-sessao` do projeto; relatório da S1 | Aberto, cosmético. Vai para a branch da retro do R0 |
-| A7 | A skill `anthropic-skills:supabase`, sincronizada do claude.ai, aparece nas sessões do projeto, embora o template desligue o plugin `supabase@synced`. A descrição dela pede uso em "ANY task involving Supabase", o que concorre com a `data-layer` no R0 | transcrição da S0b (lista de skills) | Parcial. A S2 desligou `supabase` e `supabase-postgres-best-practices` no `.claude/settings.local.json`, que fica fora do git. A documentação não diz se o `skillOverrides` de arquivos diferentes se soma ou se substitui. Conferir na lista de skills da S3: as duas fora, e o `to-spec` avulso e as 12 do usuário ainda fora. Candidato: o template desliga as duas no `settings.json`, onde já desliga o `to-spec` avulso |
+| A7 | A skill `anthropic-skills:supabase`, sincronizada do claude.ai, aparece nas sessões do projeto, embora o template desligue o plugin `supabase@synced`. A descrição dela pede uso em "ANY task involving Supabase", o que concorre com a `data-layer` no R0 | transcrição da S0b (lista de skills); relatório da S3, passo 1 | Resolvido na S3: `supabase`, `supabase-postgres-best-practices` e o `to-spec` avulso ficaram fora da lista, com o `skillOverrides` dividido entre o `settings.json` e o `settings.local.json`. Os dois arquivos se somam. Candidato: o template desliga as duas no `settings.json`, onde já desliga o `to-spec` avulso |
 | A11 | A `to-spec` do Matt manda aplicar `ready-for-agent` ao publicar, mas o playbook só aplica o label no G2. A regra do projeto venceu | relatório da S2 | Aberto, 1 ocorrência. Candidato: o playbook avisa, no F2, que o label do `to-spec` fica para o G2 |
 | A12 | O playbook não tem um passo para as correções de requisitos e de skills que aparecem no F3. O `protect-paths` bloqueia `.claude/**` nas branches `feat/*`, então um ticket não consegue corrigir a skill que o implementer pré-carrega | relatório da S2; #3, seção "Desvios dos requisitos" | Mitigado na spec A: um PR `docs/` entre o G2 e o F5 (R0.1d). Candidato: o playbook ganha esse passo |
-| A13 | `.env.example`: o `CLAUDE.md` do template proíbe editar `.env*`, o `protect-paths` libera e pede para editar o `.env.example`, e o `.env*` do `.gitignore` gerado pelo create-next-app ignora o `.env.example` | `templates/project/CLAUDE.md:21`; `templates/project/.claude/hooks/protect-paths.mjs:12-13`; `.gitignore:34` do projeto; lacuna 9 da #3 | Aberto. Depois da decisão da lacuna 9 na S3, o template acompanha: exceção no `CLAUDE.md` e `!.env.example` no `gitignore.append` |
+| A13 | `.env.example`: o `CLAUDE.md` do template proíbe editar `.env*`, o `protect-paths` libera e pede para editar o `.env.example`, e o `.env*` do `.gitignore` gerado pelo create-next-app ignora o `.env.example` | `templates/project/CLAUDE.md:21`; `templates/project/.claude/hooks/protect-paths.mjs:12-13`; `.gitignore:34` do projeto; lacuna 9 da #3 | Corrigido no template (917c7f1): o hook libera só o `.env.example`, o `CLAUDE.md` abre a exceção e o `gitignore.append` traz `!.env.example`. O projeto recebe as mesmas linhas no PR da R0.1d |
 | A14 | A skill `auth-identity` afirmava como fato coisas que a spec teve de desfazer: o `after()` no callback de e-mail e o convite pelo plugin admin. A linha do U7 (`SKILL.md:53`) levava a supor que o gancho `after` grava na mesma transação da conta | `auth-identity/SKILL.md:53` e `STAFF.md` do projeto; lacunas 1 e 2 da #3 | Corrigido na spec; a skill muda no PR da R0.1d. Para a retro: rever como as skills de projeto separam o que é fato conferido do que é suposição |
+| A15 | O passo 1 do prompt da S3 esperava o `mattpocock-skills:to-spec` na lista de skills do modelo. Uma skill com `disable-model-invocation: true` não aparece nessa lista; só o menu `/` do usuário ou o manifesto do plugin confirmam que ela existe | relatório da S3; prompt da S3, passo 1 | Corrigido nos prompts da sessão acompanhada: a lista do modelo serve só para as skills que o modelo invoca. Liga com o A4 |
+| A16 | O corpo da spec A tem cerca de 92 mil caracteres. Cada leitura da issue inteira pesa no contexto, inclusive no F5 | relatório da S3 | Aberto. Mitigado: a S4 lê só a seção "Desvios dos requisitos", e o F5 pede tickets autocontidos. Candidato para a retro da A: um orçamento de tamanho para a spec |
+| A17 | O `format.mjs` roda `prettier --write` em cada arquivo editado, e o prettier realinha as tabelas Markdown. A edição seguinte de uma linha de tabela não casa mais com o texto lido; a S3 contornou com um script Node que casa pelo começo da linha | `templates/project/.claude/hooks/format.mjs:13`; relatório da S3 | Aberto, 1 ocorrência. A S4 edita muitas tabelas dos requisitos e recebe o contorno no prompt |
+| A18 | O prompt F3 do playbook não pede capacidade e cotas: o que cresce sem limite, quem controla o volume e qual cota ele consome. O F3 da spec A não viu o registro de segurança como amplificador de ataque; a pergunta veio do usuário | `docs/playbook.md:35-42`; entrada da S3 | Aberto, 1 ocorrência. O prompt F3 da spec B leva a categoria. Candidato para a retro da A: entrar no prompt F3 do playbook |
 
 ## Cota por fase
 
@@ -126,6 +147,7 @@ Uma linha por sessão, copiada do relatório.
 | S0b | Bootstrap, reinício e GitHub | Sonnet | 5% → 12% | 30% → 31% |
 | S1 | F1 + F4 | Opus | não medido → 31% (janela nova) | 31% → 36% |
 | S2 | F2 + F3 da spec A | Opus | não medido → 48% (22,7%/h nas últimas 2 h) | 36% (fim da S1) → 42% |
+| S3 | F3 (lacunas 6 a 12) + G2 da spec A | Opus | não medido → 28% (6,8%/h nas últimas 3 h) | 42% (fim da S2) → 2% (depois do reset de sexta às 13:00) |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -137,7 +159,7 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Cota usada (5 h / semana) | | | | | | | |
 | Rodadas de grilling até o G1 | | | | | | | |
-| Lacunas no F3 | 12 | | | | | | |
+| Lacunas no F3 | 12, mais 1 rodada de complemento (registros e cotas) | | | | | | |
 | Tickets / reabertos | | | | | | | |
 | Findings (verdadeiros / rejeitados) | | | | | | | |
 | `ASSUMPTION:` que chegaram ao PR | | | | | | | |
@@ -320,3 +342,38 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - A7 parcial, A11 a A14 novos, na seção "Atritos do harness";
   - cota: a S2 e esta sessão acompanhada usaram 48% da janela de 5 h, a 22,7% por hora.
 - **Cota:** 5 h não medido → 48% · semana 36% → 42%, incluindo a sessão acompanhada.
+
+### 20/11/2026 · Sessão 3 · F3 Lacunas (continuação) + G2 · R0 (spec A) · #3
+
+- **Resumo:**
+  - as lacunas 6 a 12 fecharam numa rodada só, com as respostas da sessão acompanhada;
+  - a pedido do usuário, a sessão acompanhada analisou registros e auditoria contra as cotas gratuitas. O registro de segurança crescia no ritmo do visitante, dentro da cota de 500 MB do Supabase, e o pior caso era a organização inteira restrita até a virada do ciclo. O complemento das lacunas 7 e 8 entrou na #3: agregação por minuto, teto diário e auditoria com hash para campos longos;
+  - o G2 foi aprovado. O PR dos desvios ficou para a S4, porque o contexto estava perto de 60%.
+- **Portão:** G2 aberto. A #3 tem `ready-for-agent` e `type:spec`, sem `needs-triage`, e um comentário registra a aprovação.
+- **Conferência:**
+  - lacunas 1 a 12 com critério ou decisão no corpo da #3 → ok;
+  - "Perguntas em aberto: Nenhuma." → ok, conferido pela sessão acompanhada antes do G2;
+  - critérios novos (A5.10 a A5.14, A4.22, A2.21, U11 e U12) no corpo → ok, conferido;
+  - nenhum e-mail no corpo da #3 → ok, conferido;
+  - 18 linhas em "Desvios dos requisitos", cada uma com o arquivo → ok, pelo relatório;
+  - ASSUMPTION da A5.15 (e-mail inexistente, para o bloqueio da conta não gravar `account_locked`) → ok: o bloqueio tem critérios próprios;
+  - PR dos desvios → falta: fica para a S4 (R0.1d);
+  - commits e reviews → não se aplica.
+- **Decisões do usuário, com o motivo** (o detalhe está na #3):
+  - lacuna 6: só as rotas do R0 ficam ligadas, e as outras vão para `disabledPaths`. As 12 h da sessão de equipe ficam no `verifySession()`, sem ganchos de sessão. Motivo: o gancho de atualização não recebe a sessão, e devolver `false` desloga;
+  - mínimo de senha da equipe mantido em 12 caracteres. A recomendação de 15, pela NIST SP 800-63B-4, não entrou;
+  - lacuna 7 e complemento: registro de segurança agregado por minuto, com o motivo e o status na chave, e teto diário de 1 a 2.000 linhas novas (padrão 1.000, em UTC). Só ficam fora do teto os eventos que exigem credencial ou sessão, e um ataque contra conta de equipe vai para um transbordo com a conta. Motivo: o volume não pode depender do visitante. No pior caso, cerca de 100 MB em 6 meses;
+  - lacuna 8: script de papéis em duas partes, com a parte 2 depois de toda migration; papel só de leitura restrito aos dois registros; diff da auditoria com tamanho e hash para campos longos;
+  - lacuna 9: exceção só para o `.env.example`;
+  - lacuna 10: bootstrap do primeiro admin no PC do responsável técnico, nunca por workflow, porque o repositório é público;
+  - lacuna 11: `SIGNUP_ENABLED` só com "true" ou "false" exatos; o retorno do login aceita só caminho interno;
+  - lacuna 12: projeto próprio do Vitest para o banco, com o script de papéis no `globalSetup`.
+- **Sinais:**
+  - A7 resolvido: os `skillOverrides` dos dois arquivos de configuração se somam;
+  - A13 corrigido no template (917c7f1), com teste novo no `protect-paths`;
+  - A15 a A18 novos. O A18 pesa mais: o prompt F3 não cobre capacidade e cotas, e o ponto fraco dos registros só apareceu por pergunta do usuário;
+  - a spec A tem cerca de 92 mil caracteres (A16);
+  - itens "Unverified": de 10 para 12 (U11 e U12), nenhum resolvido;
+  - um aviso falso de limite da API do GitHub (`gh api rate_limit` mostrou 4.994 restantes). Caso isolado;
+  - o que a análise deixou para a spec B e a R1 está em "Levar à spec B e à R1".
+- **Cota:** 5 h não medido → 28% (6,8% por hora) · semana 42% → 2%, depois do reset de sexta às 13:00, incluindo a sessão acompanhada.
