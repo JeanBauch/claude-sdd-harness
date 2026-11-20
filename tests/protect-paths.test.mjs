@@ -11,6 +11,8 @@ const blocked = [
   '.env.local',
   'apps/web/.env.production',
   'C:\\proj\\.env.development.local',
+  '.env.sample',
+  '.env.template',
   'pnpm-lock.yaml',
   'package-lock.json',
   'yarn.lock',
