@@ -129,13 +129,14 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A10 | A skill `relatorio-sessao` do projeto manda preencher a cota "com /quota", mas o valor certo vem do `/usage`, como o playbook diz | `.claude/skills/relatorio-sessao` do projeto; relatório da S1 | Aberto, cosmético. Vai para a branch da retro do R0 |
 | A7 | A skill `anthropic-skills:supabase`, sincronizada do claude.ai, aparece nas sessões do projeto, embora o template desligue o plugin `supabase@synced`. A descrição dela pede uso em "ANY task involving Supabase", o que concorre com a `data-layer` no R0 | transcrição da S0b (lista de skills); relatório da S3, passo 1 | Resolvido na S3: `supabase`, `supabase-postgres-best-practices` e o `to-spec` avulso ficaram fora da lista, com o `skillOverrides` dividido entre o `settings.json` e o `settings.local.json`. Os dois arquivos se somam. Candidato: o template desliga as duas no `settings.json`, onde já desliga o `to-spec` avulso |
 | A11 | A `to-spec` do Matt manda aplicar `ready-for-agent` ao publicar, mas o playbook só aplica o label no G2. A regra do projeto venceu | relatório da S2 | Aberto, 1 ocorrência. Candidato: o playbook avisa, no F2, que o label do `to-spec` fica para o G2 |
-| A12 | O playbook não tem um passo para as correções de requisitos e de skills que aparecem no F3. O `protect-paths` bloqueia `.claude/**` nas branches `feat/*`, então um ticket não consegue corrigir a skill que o implementer pré-carrega | relatório da S2; #3, seção "Desvios dos requisitos" | Mitigado na spec A: um PR `docs/` entre o G2 e o F5 (R0.1d). Candidato: o playbook ganha esse passo |
+| A12 | O playbook não tem um passo para as correções de requisitos e de skills que aparecem no F3. O `protect-paths` bloqueia `.claude/**` nas branches `feat/*`, então um ticket não consegue corrigir a skill que o implementer pré-carrega | relatório da S2; #3, seção "Desvios dos requisitos" | Confirmado na S4: o PR `docs/` (#4) passou com o CI verde. Sem receita no playbook, a sessão improvisou a branch: o `git checkout -b … origin/main` deixou o upstream em `origin/main`, e o `push -u` corrigiu. O relatório também não achou uma fase do playbook para citar. Candidato: o playbook ganha esse passo, com a mesma receita de branch da `/ship-ticket` (`git switch main`, `git pull --ff-only`, `git switch -c`) |
 | A13 | `.env.example`: o `CLAUDE.md` do template proíbe editar `.env*`, o `protect-paths` libera e pede para editar o `.env.example`, e o `.env*` do `.gitignore` gerado pelo create-next-app ignora o `.env.example` | `templates/project/CLAUDE.md:21`; `templates/project/.claude/hooks/protect-paths.mjs:12-13`; `.gitignore:34` do projeto; lacuna 9 da #3 | Corrigido no template (917c7f1): o hook libera só o `.env.example`, o `CLAUDE.md` abre a exceção e o `gitignore.append` traz `!.env.example`. O projeto recebe as mesmas linhas no PR da R0.1d |
 | A14 | A skill `auth-identity` afirmava como fato coisas que a spec teve de desfazer: o `after()` no callback de e-mail e o convite pelo plugin admin. A linha do U7 (`SKILL.md:53`) levava a supor que o gancho `after` grava na mesma transação da conta | `auth-identity/SKILL.md:53` e `STAFF.md` do projeto; lacunas 1 e 2 da #3 | Corrigido na spec; a skill muda no PR da R0.1d. Para a retro: rever como as skills de projeto separam o que é fato conferido do que é suposição |
 | A15 | O passo 1 do prompt da S3 esperava o `mattpocock-skills:to-spec` na lista de skills do modelo. Uma skill com `disable-model-invocation: true` não aparece nessa lista; só o menu `/` do usuário ou o manifesto do plugin confirmam que ela existe | relatório da S3; prompt da S3, passo 1 | Corrigido nos prompts da sessão acompanhada: a lista do modelo serve só para as skills que o modelo invoca. Liga com o A4 |
-| A16 | O corpo da spec A tem cerca de 92 mil caracteres. Cada leitura da issue inteira pesa no contexto, inclusive no F5 | relatório da S3 | Aberto. Mitigado: a S4 lê só a seção "Desvios dos requisitos", e o F5 pede tickets autocontidos. Candidato para a retro da A: um orçamento de tamanho para a spec |
-| A17 | O `format.mjs` roda `prettier --write` em cada arquivo editado, e o prettier realinha as tabelas Markdown. A edição seguinte de uma linha de tabela não casa mais com o texto lido; a S3 contornou com um script Node que casa pelo começo da linha | `templates/project/.claude/hooks/format.mjs:13`; relatório da S3 | Aberto, 1 ocorrência. A S4 edita muitas tabelas dos requisitos e recebe o contorno no prompt |
+| A16 | O corpo da spec A tem cerca de 92 mil caracteres. Cada leitura da issue inteira pesa no contexto, inclusive no F5 | relatório da S3 | Aberto, 2 ocorrências. Na S4, o corpo tinha 93.226 caracteres, e a sessão precisou de dois scripts próprios para extrair a seção e os critérios citados. Mitigado: o F5 pede tickets autocontidos. Candidato para a retro da A: um orçamento de tamanho para a spec |
+| A17 | O `format.mjs` roda `prettier --write` em cada arquivo editado, e o prettier realinha as tabelas Markdown. A edição seguinte de uma linha de tabela não casa mais com o texto lido; a S3 contornou com um script Node que casa pelo começo da linha | `templates/project/.claude/hooks/format.mjs:13`; relatório da S3 | Aberto. Na S4, as edições por script Node passaram por fora do `format.mjs` e do `protect-paths`, cujo matcher é `Edit|Write|NotebookEdit`; o `prettier --check` passou. Esse contorno contradiz o gotcha de edição do `CLAUDE.md` do template e escapa das travas. Candidato mais barato: depois de editar uma tabela, reler só as linhas dela antes da edição seguinte, sem script |
 | A18 | O prompt F3 do playbook não pede capacidade e cotas: o que cresce sem limite, quem controla o volume e qual cota ele consome. O F3 da spec A não viu o registro de segurança como amplificador de ataque; a pergunta veio do usuário | `docs/playbook.md:35-42`; entrada da S3 | Aberto, 1 ocorrência. O prompt F3 da spec B leva a categoria. Candidato para a retro da A: entrar no prompt F3 do playbook |
+| A19 | O script Node do contorno do A17 quebrou duas vezes no heredoc do Bash: `unexpected EOF` e escapes perdidos no template literal, por causa de crases e aspas. A S4 passou a gravar o `.mjs` com a ferramenta Write | relatório da S4 (`patch-req.mjs` e `crit.mjs` no scratchpad da sessão) | Aberto, 1 ocorrência. É consequência do A17 e desaparece se o A17 for resolvido sem script |
 
 ## Cota por fase
 
@@ -148,6 +149,7 @@ Uma linha por sessão, copiada do relatório.
 | S1 | F1 + F4 | Opus | não medido → 31% (janela nova) | 31% → 36% |
 | S2 | F2 + F3 da spec A | Opus | não medido → 48% (22,7%/h nas últimas 2 h) | 36% (fim da S1) → 42% |
 | S3 | F3 (lacunas 6 a 12) + G2 da spec A | Opus | não medido → 28% (6,8%/h nas últimas 3 h) | 42% (fim da S2) → 2% (depois do reset de sexta às 13:00) |
+| S4 | Desvios da spec A (R0.1d) | Sonnet | não medido (1% numa janela nova, na hora do relatório) | 2% (fim da S3) → 3% |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -377,3 +379,27 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - um aviso falso de limite da API do GitHub (`gh api rate_limit` mostrou 4.994 restantes). Caso isolado;
   - o que a análise deixou para a spec B e a R1 está em "Levar à spec B e à R1".
 - **Cota:** 5 h não medido → 28% (6,8% por hora) · semana 42% → 2%, depois do reset de sexta às 13:00, incluindo a sessão acompanhada.
+
+### 20/11/2026 · Sessão 4 · Desvios da spec A (R0.1d) · R0 (spec A) · #3, PR #4
+
+- **Resumo:** as 18 linhas de "Desvios dos requisitos" da #3 viraram o PR #4 (branch `docs/r0-desvios-spec-a`, commit `fc4e9ee`): requisitos v2.5, glossário, skills `auth-identity` e `data-layer`, `CLAUDE.md`, `.gitignore` e o hook `protect-paths`. São 10 arquivos, com +85 e −25 linhas. A #3 não mudou.
+- **Portão:** o merge do PR #4 está pendente e é do usuário. A sessão acompanhada recomenda o merge.
+- **Conferência:**
+  - PR numa branch `docs/`, fora da `/ship-ticket` → ok;
+  - só os arquivos da tabela de desvios → ok pelo relatório. A sessão acompanhada conferiu os 10 arquivos com `gh pr view 4 --json files`;
+  - `format:check`, `lint`, `typecheck` e `test`, com o comando e a saída → ok;
+  - CI verde → ok, conferido pela sessão acompanhada: `ci`, CodeQL e os dois Analyze com SUCCESS, e `mergeStateStatus` CLEAN;
+  - `protect-paths` igual ao do template → ok, conferido pela sessão acompanhada: o `diff` com `templates/project/.claude/hooks/protect-paths.mjs` não acusou diferença. No smoke test, o hook devolveu 0 para `.env.example` e 2 para `.env.sample`, `.env.template`, `.env` e `.env.local`;
+  - `.env.example` versionado → ok (`.gitignore:35:!.env.example`);
+  - varredura de dado pessoal e segredo → ok;
+  - `ASSUMPTION:` → não se aplica, porque não há nenhuma nova. O corpo do PR traz duas escolhas fáceis de reverter: `at` e `last_at` em `security_events`, e os papéis do banco descritos pela função, já que a spec não dá nomes a eles. O ticket da A1 pode ajustar as duas;
+  - reviews → não se aplica: o PR só mexe em documentação e regras, e o hook é cópia do template, que tem teste no harness (917c7f1);
+  - linha `Métricas:` → não se aplica, porque não é ticket.
+- **Sinais:**
+  - A12 confirmado: o PR `docs/` entre o G2 e o F5 funcionou, mas sem receita de branch;
+  - A16 com 2 ocorrências: o corpo da #3 tem 93.226 caracteres, e a S4 precisou de dois scripts próprios só para extrair trechos;
+  - A17 se agravou: o contorno por script passa por fora do `format.mjs` e do `protect-paths`;
+  - A19 é novo e vem do A17: o heredoc quebrou com crases e aspas;
+  - itens "Unverified": continuam 12, e agora todos estão nas skills (U10 a U12 entraram na `auth-identity`). Nenhum foi resolvido. Como o `protect-paths` bloqueia `.claude/**` nas branches `feat/*`, o ticket registra o resultado do item, e a linha sai da skill num PR `docs/` depois;
+  - o Sonnet bastou numa sessão só de documentação, sem nenhuma escalada.
+- **Cota:** 5 h não medido (1% numa janela nova, na hora do relatório) · semana 2% → 3%.
