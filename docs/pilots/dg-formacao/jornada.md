@@ -31,6 +31,7 @@ Desde a S2, o R0 tem duas specs: a **A** (#3, identidade e dados), que fecha só
 | R0.1 | F2 + F3 da spec A | Spec #3 com as histórias A1 a A6, os 5 seams de teste e os itens U1 a U10 como critérios; depois, o prompt F3 | G2: zero lacunas → `ready-for-agent` |
 | R0.1d | Desvios da spec A | PR numa branch `docs/`, fora da `/ship-ticket`: requisitos v2.5, glossário e skill `auth-identity`, conforme a seção "Desvios dos requisitos" da #3 | Merge do usuário, antes do F5 |
 | R0.2 | F5 da spec A | `to-tickets #3`: sub-issues com `blocked-by` | G4: granularidade e dependências aprovadas; `model:opus` nos tickets de autenticação, transação, backup e migration |
+| R0.2d | Sincronia do harness | PR `docs/` com o implementer que lê o ticket (00666f5) e o `format.mjs` que ignora arquivos fora do projeto (ea8b7d8) | Merge do usuário, antes da primeira `/ship-ticket` |
 | R0.3 em diante | F6 + F7 da spec A, uma sessão por ticket | `/ship-ticket` | Definition of Done completa e merge feito pelo usuário |
 | R0.B | Spec B: F2 + F3, F5, F6 + F7 | B1 a B6. Começa depois do G2 da A; a B1 (contas nos provedores, só do usuário) corre em paralelo aos tickets da A | G2 e G4 da B; merges |
 | R0.e | Avaliação das skills | Rodar os cenários de `docs/agents/skill-evals/` sem e com cada skill | Placar registrado no README das evals; regra que não muda o placar sai da skill |
@@ -63,22 +64,22 @@ O F4 só volta quando a fatia trouxer uma decisão difícil de reverter, que vir
 
 ## Itens "Unverified" das skills
 
-Cada item vira critério de um ticket do R0. Quando o item se confirmar, a linha correspondente sai da skill; se não se confirmar, a regra da skill muda. A coluna "Critério" aponta o critério da spec #3; o ticket entra no F5.
+Cada item vira critério de um ticket do R0. Quando o item se confirmar, a linha correspondente sai da skill; se não se confirmar, a regra da skill muda. A coluna "Critério" aponta o critério da spec #3 e, depois da seta, o ticket que confirma o item (F5, S5).
 
 | # | Skill | Item a confirmar | Critério | Resultado |
 | --- | --- | --- | --- | --- |
-| U1 | data-layer | O drizzle-kit emite `.op('extensions.gin_trgm_ops')` no SQL do índice exatamente como escrito | #3 A1.9 (schema descartável, fora do commit; o índice real entra na R1) | — |
-| U2 | data-layer | O tipo de coluna que o CLI do Better Auth gera para `user.id` quando `generateId` devolve UUID | #3 A2.6 | — |
-| U3 | auth-identity | `schemaName: 'app'` no adapter põe todas as tabelas do Better Auth em `app`, inclusive os campos do plugin admin e `rateLimit` | #3 A2.5 | — |
-| U4 | auth-identity | O plugin admin guarda vários papéis separados por vírgula em `role` e respeita todos | #3 A4.8 | — |
-| U5 | auth-identity | O pedido de reset de senha devolve a mesma resposta para e-mail desconhecido | #3 A3.5 | — |
-| U6 | auth-identity | `after()` funciona dentro dos callbacks de e-mail do Better Auth | #3 A3.12 (seam 5, contra `next start`) | — |
-| U7 | auth-identity | `databaseHooks.user.create.after` roda na requisição do cadastro, de modo que perfil principal e consentimentos podem ser gravados ali | #3 A2.1 | — |
-| U8 | auth-identity | Um after-hook em `/sign-in/email` alcança e revoga a sessão que acabou de criar (STAFF.md) | #3 A4.11 | — |
-| U9 | auth-identity | Os nomes de rota do rate limit na 1.7: `/sign-in/email`, `/sign-up/email`, `/request-password-reset` e `/send-verification-email` | #3 A2.11 e A3.8 | — |
-| U10 | auth-identity (da S2) | Com `transaction: true` no `drizzleAdapter`, o gancho `after` roda depois do commit e é pulado no rollback. A documentação do Better Auth 1.7.15 já afirma isso; o teste confirma no código | #3 A2.12 | — |
-| U11 | auth-identity (da S3) | Com `disabledPaths`, a rota HTTP responde 404, mas a chamada pelo servidor (`auth.api`) continua funcionando. Na main do Better Auth, o `disabledPaths` só é conferido no `onRequest` do roteador HTTP | #3, seam 1 (a A4.8 depende dele) | — |
-| U12 | auth-identity (da S3) | Com `storage: 'database'`, o Better Auth não apaga as linhas vencidas de `rate_limits`. As notas da 1.5 citam limpeza automática só no armazenamento em memória; o PR traz o trecho do código da 1.7.15 | #3 A2.21 (limpeza própria no job diário) | — |
+| U1 | data-layer | O drizzle-kit emite `.op('extensions.gin_trgm_ops')` no SQL do índice exatamente como escrito | #3 A1.9 (schema descartável, fora do commit; o índice real entra na R1) → #7 | — |
+| U2 | data-layer | O tipo de coluna que o CLI do Better Auth gera para `user.id` quando `generateId` devolve UUID | #3 A2.6 → #8 | — |
+| U3 | auth-identity | `schemaName: 'app'` no adapter põe todas as tabelas do Better Auth em `app`, inclusive os campos do plugin admin e `rateLimit` | #3 A2.5 → #8 | — |
+| U4 | auth-identity | O plugin admin guarda vários papéis separados por vírgula em `role` e respeita todos | #3 A4.8 → #19 | — |
+| U5 | auth-identity | O pedido de reset de senha devolve a mesma resposta para e-mail desconhecido | #3 A3.5 → #17 | — |
+| U6 | auth-identity | `after()` funciona dentro dos callbacks de e-mail do Better Auth | #3 A3.12 (seam 5, contra `next start`) → #13 (A3.7, seam 1), #15 (primeira prova, no E2E pelo HTTP) e #23 (A3.12, dono) | — |
+| U7 | auth-identity | `databaseHooks.user.create.after` roda na requisição do cadastro, de modo que perfil principal e consentimentos podem ser gravados ali | #3 A2.1 → #8 | — |
+| U8 | auth-identity | Um after-hook em `/sign-in/email` alcança e revoga a sessão que acabou de criar (STAFF.md) | #3 A4.11 → #18 | — |
+| U9 | auth-identity | Os nomes de rota do rate limit na 1.7: `/sign-in/email`, `/sign-up/email`, `/request-password-reset` e `/send-verification-email` | #3 A2.11 e A3.8 → #12 (A2.11) e #17 (A3.8) | — |
+| U10 | auth-identity (da S2) | Com `transaction: true` no `drizzleAdapter`, o gancho `after` roda depois do commit e é pulado no rollback. A documentação do Better Auth 1.7.15 já afirma isso; o teste confirma no código | #3 A2.12 → #8 | — |
+| U11 | auth-identity (da S3) | Com `disabledPaths`, a rota HTTP responde 404, mas a chamada pelo servidor (`auth.api`) continua funcionando. Na main do Better Auth, o `disabledPaths` só é conferido no `onRequest` do roteador HTTP | #3, seam 1 (a A4.8 depende dele) → #19 | — |
+| U12 | auth-identity (da S3) | Com `storage: 'database'`, o Better Auth não apaga as linhas vencidas de `rate_limits`. As notas da 1.5 citam limpeza automática só no armazenamento em memória; o PR traz o trecho do código da 1.7.15 | #3 A2.21 (limpeza própria no job diário) → #25 | — |
 
 U3 e U4 se sobrepõem ao item 3 das verificações do R0 (seção 10.4). A spec do R0 trata os dois juntos.
 
@@ -133,10 +134,15 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A13 | `.env.example`: o `CLAUDE.md` do template proíbe editar `.env*`, o `protect-paths` libera e pede para editar o `.env.example`, e o `.env*` do `.gitignore` gerado pelo create-next-app ignora o `.env.example` | `templates/project/CLAUDE.md:21`; `templates/project/.claude/hooks/protect-paths.mjs:12-13`; `.gitignore:34` do projeto; lacuna 9 da #3 | Corrigido no template (917c7f1): o hook libera só o `.env.example`, o `CLAUDE.md` abre a exceção e o `gitignore.append` traz `!.env.example`. O projeto recebe as mesmas linhas no PR da R0.1d |
 | A14 | A skill `auth-identity` afirmava como fato coisas que a spec teve de desfazer: o `after()` no callback de e-mail e o convite pelo plugin admin. A linha do U7 (`SKILL.md:53`) levava a supor que o gancho `after` grava na mesma transação da conta | `auth-identity/SKILL.md:53` e `STAFF.md` do projeto; lacunas 1 e 2 da #3 | Corrigido na spec; a skill muda no PR da R0.1d. Para a retro: rever como as skills de projeto separam o que é fato conferido do que é suposição |
 | A15 | O passo 1 do prompt da S3 esperava o `mattpocock-skills:to-spec` na lista de skills do modelo. Uma skill com `disable-model-invocation: true` não aparece nessa lista; só o menu `/` do usuário ou o manifesto do plugin confirmam que ela existe | relatório da S3; prompt da S3, passo 1 | Corrigido nos prompts da sessão acompanhada: a lista do modelo serve só para as skills que o modelo invoca. Liga com o A4 |
-| A16 | O corpo da spec A tem cerca de 92 mil caracteres. Cada leitura da issue inteira pesa no contexto, inclusive no F5 | relatório da S3 | Aberto, 2 ocorrências. Na S4, o corpo tinha 93.226 caracteres, e a sessão precisou de dois scripts próprios para extrair a seção e os critérios citados. Mitigado: o F5 pede tickets autocontidos. Candidato para a retro da A: um orçamento de tamanho para a spec |
+| A16 | O corpo da spec A tem cerca de 92 mil caracteres. Cada leitura da issue inteira pesa no contexto, inclusive no F5 | relatório da S3 | 3 ocorrências. Na S4, o corpo tinha 93.226 caracteres, e a sessão precisou de dois scripts próprios para extrair a seção e os critérios citados. Na S5, a maior carga na conta de "cabe na janela" foi o passo 1 do implementer, que lia a #3 com os comentários (cerca de 121 mil caracteres) em cada ticket. Corrigido no template (00666f5): o implementer lê o ticket e só abre o corpo da spec quando o ticket deixa uma dúvida, e o F5 do playbook pede tickets autocontidos. O projeto recebe a linha no PR da R0.2d. Ainda candidato para a retro da A: um orçamento de tamanho para a spec |
 | A17 | O `format.mjs` roda `prettier --write` em cada arquivo editado, e o prettier realinha as tabelas Markdown. A edição seguinte de uma linha de tabela não casa mais com o texto lido; a S3 contornou com um script Node que casa pelo começo da linha | `templates/project/.claude/hooks/format.mjs:13`; relatório da S3 | Aberto. Na S4, as edições por script Node passaram por fora do `format.mjs` e do `protect-paths`, cujo matcher é `Edit|Write|NotebookEdit`; o `prettier --check` passou. Esse contorno contradiz o gotcha de edição do `CLAUDE.md` do template e escapa das travas. Candidato mais barato: depois de editar uma tabela, reler só as linhas dela antes da edição seguinte, sem script |
 | A18 | O prompt F3 do playbook não pede capacidade e cotas: o que cresce sem limite, quem controla o volume e qual cota ele consome. O F3 da spec A não viu o registro de segurança como amplificador de ataque; a pergunta veio do usuário | `docs/playbook.md:35-42`; entrada da S3 | Aberto, 1 ocorrência. O prompt F3 da spec B leva a categoria. Candidato para a retro da A: entrar no prompt F3 do playbook |
-| A19 | O script Node do contorno do A17 quebrou duas vezes no heredoc do Bash: `unexpected EOF` e escapes perdidos no template literal, por causa de crases e aspas. A S4 passou a gravar o `.mjs` com a ferramenta Write | relatório da S4 (`patch-req.mjs` e `crit.mjs` no scratchpad da sessão) | Aberto, 1 ocorrência. É consequência do A17 e desaparece se o A17 for resolvido sem script |
+| A19 | O script Node do contorno do A17 quebrou duas vezes no heredoc do Bash: `unexpected EOF` e escapes perdidos no template literal, por causa de crases e aspas. A S4 passou a gravar o `.mjs` com a ferramenta Write | relatório da S4 (`patch-req.mjs` e `crit.mjs` no scratchpad da sessão) | Aberto, 2 ocorrências. Em 21/11, a sessão acompanhada viu o mesmo `unexpected EOF` num heredoc com aspas, fora do contorno do A17, e também resolveu com o Write. O problema vale para qualquer script longo passado por heredoc, não só para o A17. Candidato: um gotcha no `CLAUDE.md` do template, dizendo para gravar o script com o Write e rodar em seguida |
+| A20 | O critério do `model:opus` no G4 ("autenticação") marca quase tudo numa spec de autenticação: a proposta do F5 tinha 14 de 19 tickets com Opus; depois do G4, 13 de 21 | proposta da S5; labels dos #5 a #25 | Aberto. A medir: as escaladas dos 8 tickets em Sonnet. Candidato para a retro da A: separar o ticket que toca credencial, sessão, transação ou SQL do que só usa um fluxo já testado |
+| A21 | Antes do primeiro código, o implementer lê cerca de 91 mil caracteres de regras, skills, ADRs e glossário, inclusive a skill `seo` pré-carregada num ticket de autenticação | `templates/project/.claude/agents/implementer.md:5-9` e o passo 1; proposta revisada da S5 | Aberto, 1 ocorrência. Candidato para a retro da A: pré-carregar só as skills que o ticket toca |
+| A22 | O `format.mjs` rodava o prettier em qualquer arquivo editado, inclusive no scratchpad, fora do projeto. Duas substituições por script falharam sem aviso na S5 | relatório da S5; `templates/project/.claude/hooks/format.mjs` | Corrigido no template (ea8b7d8), com teste novo: o hook só formata arquivo dentro da raiz do projeto. O projeto recebe o hook no PR da R0.2d |
+| A23 | A `/ship-ticket` propõe o ticket desbloqueado de menor número, então a ordem de publicação do F5 define a ordem de execução. A `to-tickets` não diz isso | relatório da S5; `templates/project/.claude/skills/ship-ticket/SKILL.md:14` | Aberto, 1 ocorrência. Na S5, a renumeração contornou o problema. Candidato: o F5 do playbook avisa que a ordem de publicação é a de execução |
+| A24 | A regra "sem caminho de arquivo nem código" nas issues fica ambígua quando o critério literal da spec cita identificadores (`.env.example`, `databaseHooks`). A S5 manteve o texto literal | relatório da S5; `templates/project/CLAUDE.md`, regras do fluxo | Aberto, 1 ocorrência. Candidato: a regra vale para a implementação, e o texto citado da spec fica como está |
 
 ## Cota por fase
 
@@ -150,6 +156,7 @@ Uma linha por sessão, copiada do relatório.
 | S2 | F2 + F3 da spec A | Opus | não medido → 48% (22,7%/h nas últimas 2 h) | 36% (fim da S1) → 42% |
 | S3 | F3 (lacunas 6 a 12) + G2 da spec A | Opus | não medido → 28% (6,8%/h nas últimas 3 h) | 42% (fim da S2) → 2% (depois do reset de sexta às 13:00) |
 | S4 | Desvios da spec A (R0.1d) | Sonnet | não medido (1% numa janela nova, na hora do relatório) | 2% (fim da S3) → 3% |
+| S5 | F5 da spec A | Opus | não medido → 20% (49,2%/h nos últimos 24 min, incluindo a sessão acompanhada) | 3% (fim da S4) → 8% |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -162,7 +169,7 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
 | Cota usada (5 h / semana) | | | | | | | |
 | Rodadas de grilling até o G1 | | | | | | | |
 | Lacunas no F3 | 12, mais 1 rodada de complemento (registros e cotas) | | | | | | |
-| Tickets / reabertos | | | | | | | |
+| Tickets / reabertos | 21 (#5 a #25; 13 com `model:opus`) / — | | | | | |
 | Findings (verdadeiros / rejeitados) | | | | | | | |
 | `ASSUMPTION:` que chegaram ao PR | | | | | | | |
 | Escaladas Sonnet → Opus | | | | | | | |
@@ -403,3 +410,29 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - itens "Unverified": continuam 12, e agora todos estão nas skills (U10 a U12 entraram na `auth-identity`). Nenhum foi resolvido. Como o `protect-paths` bloqueia `.claude/**` nas branches `feat/*`, o ticket registra o resultado do item, e a linha sai da skill num PR `docs/` depois;
   - o Sonnet bastou numa sessão só de documentação, sem nenhuma escalada.
 - **Cota:** 5 h não medido (1% numa janela nova, na hora do relatório) · semana 2% → 3%.
+
+### 21/11/2026 · Sessão 5 · F5 Tickets · R0 (spec A) · #3, tickets #5 a #25
+
+- **Resumo:** a spec A virou 21 tickets (#5 a #25), sub-issues da #3 com `blocked-by` nativo, 13 deles com `model:opus`. A proposta tinha 19, e duas rodadas levaram a 21:
+  - os três ajustes do usuário: o seed em duas partes, um dono para o helper das contas de equipe e o #13 sem Opus;
+  - três mudanças derivadas, também aprovadas: os adaptadores de e-mail do servidor e a infraestrutura do E2E no #15; as partes de tela da A4.15, A4.16 e A4.19 no #24; e a renumeração, para o primeiro E2E rodar cedo.
+
+  Cada corpo traz o texto literal dos critérios e das decisões da #3 de que o ticket depende.
+- **Portão:** G4 aprovado pelo usuário em 21/11/2026. Motivos dos ajustes:
+  - o primeiro E2E contra o servidor de produção só rodaria no 17º ticket;
+  - a regra condicional "o primeiro dos dois cria o helper" geraria duas implementações;
+  - o `after()` do U6 mora nos adaptadores do servidor, não na confirmação de e-mail.
+- **Conferência:**
+  - sub-issues `type:ticket` com `blocked-by` nativo → ok, conferido pela sessão acompanhada por GraphQL: 21 sub-issues, com bloqueadores e labels iguais ao aprovado no G4 e 13 com `model:opus`;
+  - `ready-for-agent` nos 21 → ok, publicados depois do G4;
+  - todo critério com um dono, sem ciclo e com U1 a U12 cobertos → ok pelo script da sessão (100 IDs);
+  - Definition of Ready em cada ticket → ok pelo relatório: critérios literais, sem placeholder nem caminho;
+  - #3 intacta → ok: mesmo sha do corpo, mesmos labels e `updatedAt` de 20/11;
+  - corpo do #15 editado depois de publicar, para dizer como se confere o adaptador do Resend → ok, registrado;
+  - commits, reviews e `ASSUMPTION:` → não se aplica. O #7, o #9 e o #15 devem gerar `ASSUMPTION:` na implementação: nomes dos papéis, `at` e `last_at`, e o banco do E2E.
+- **Sinais:**
+  - A16 na terceira ocorrência, agora com custo medido: o implementer lia cerca de 121 mil caracteres da #3 em cada ticket. Corrigido no template (00666f5); o projeto recebe a correção na R0.2d;
+  - A20 a A24 novos: o critério do `model:opus`; a carga de regras do implementer; o `format.mjs` fora do projeto, já corrigido no template (ea8b7d8); a ordem de publicação como ordem de execução; e a regra de caminhos nas issues;
+  - itens "Unverified": continuam 12, nenhum resolvido. O mapa de item para ticket está na seção dos itens;
+  - cota: a janela de 5 h chegou a 20%, a 49,2% por hora nos últimos 24 min, incluindo a sessão acompanhada. A semana subiu 5 pontos numa sessão sem código.
+- **Cota:** 5 h não medido → 20% · semana 3% (fim da S4) → 8%, incluindo a sessão acompanhada.
