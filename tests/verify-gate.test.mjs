@@ -161,6 +161,16 @@ test('format: runs prettier on the edited file and never blocks', () => {
   assert.match(calls(root), /^prettier --write --ignore-unknown .*a\.ts/m)
 })
 
+test('format: leaves a file outside the project alone, such as a scratchpad script', () => {
+  const root = gitRepo()
+  installStubs(root, { prettier: { exit: 0 } })
+  const outside = join(tempDir(), 'patch.mjs')
+  writeFileSync(outside, 'const   a = 1\n')
+  const r = runHook('format.mjs', { hook_event_name: 'PostToolUse', tool_name: 'Write', tool_input: { file_path: outside }, cwd: root })
+  assert.equal(r.code, 0, r.stderr)
+  assert.equal(calls(root), '')
+})
+
 test('format: does nothing when prettier is not installed', () => {
   const root = gitRepo()
   const r = runHook('format.mjs', { tool_name: 'Write', tool_input: { file_path: join(root, 'src', 'a.ts') }, cwd: root })
