@@ -56,7 +56,9 @@ Give every finding a verdict:
 - **accept**: a real issue you choose to carry. Give the reason.
 - **reject**: false positive, or contradicts the spec. Give the reason.
 
-Send all the **fix** findings to a new `implementer` call in fix mode, listing each finding with its file and failure scenario. Use the same model as step 4, or Opus if step 7 escalated. Then repeat step 5.
+Before the fix call, check step 7: when step 4 ran on Sonnet and at least one **fix** finding is a correctness bug, escalate now, so the fix call runs on Opus. Then send all the **fix** findings to a new `implementer` call in fix mode, listing each finding with its file and failure scenario, on the model step 4 used or on Opus if you escalated. Then repeat step 5.
+
+A finding that both reviews report gets one verdict, citing both.
 
 Done when every finding has a verdict, the fixes are committed, and step 5 is green again.
 
