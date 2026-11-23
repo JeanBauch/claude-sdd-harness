@@ -110,6 +110,7 @@ Saiu da análise de registros, auditoria e cotas gratuitas que a sessão acompan
 - **B3:** parte 2 do script de papéis depois das migrations; conferir se o pooler do Supabase aceita os papéis próprios.
 - **Restauração (9.12.9 e 9.12.11):** o diário das migrations fica no schema `app` e entra no dump. Rodar a primeira migration antes do `pg_restore` pode colidir com ele; o ensaio de restauração confere.
 - **Job diário:** a limpeza própria das linhas vencidas do rate limit (A2.21) e a do registro de segurança.
+- **TLS do banco em staging e produção:** a validação do #6 aceita `sslmode` com `require`, `verify-ca` ou `verify-full` (ASSUMPTION do #6). O Supabase recomenda `verify-full` com a CA do projeto (docs "Postgres SSL Enforcement"). Para o postgres.js, as fontes divergem sobre o que `require` faz: só cifra ou também confere o certificado. Conferir no código-fonte do pacote depois que o #7 instalá-lo, e decidir na spec B se a validação passa a exigir `verify-full`.
 - **F3 da spec B:** o prompt leva a categoria "capacidade e cotas" (A18).
 - **R1:** o `search_misses` repete o padrão do registro de segurança (visitante anônimo, termo aleatório). A spec da R1 traz tamanho máximo do termo e teto de termos por dia.
 
@@ -145,6 +146,8 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A24 | A regra "sem caminho de arquivo nem código" nas issues fica ambígua quando o critério literal da spec cita identificadores (`.env.example`, `databaseHooks`). A S5 manteve o texto literal | relatório da S5; `templates/project/CLAUDE.md`, regras do fluxo | Aberto, 1 ocorrência. Candidato: a regra vale para a implementação, e o texto citado da spec fica como está |
 | A25 | No modo auto, o classificador nega ao agente a escrita num hook: o `Copy-Item` para `.claude/hooks/` saiu com o motivo "Undermining Oversight". Sincronizar um hook do template no projeto vira passo do usuário, e o prompt da S6 não marcou isso. O `apply-template --force` não serve, porque sobrescreve as personalizações do projeto | relatório da S6; `scripts/apply-template.mjs:3-4` | Aberto, 1 ocorrência. Na S6, o primeiro comando dado ao usuário usava caminho relativo e falhou no PowerShell do PC; a sessão acompanhada fez a cópia a pedido dele. Candidato: o `apply-template` ganha uma opção para copiar só os caminhos indicados, rodada pelo usuário, e os prompts marcam a sincronia de hook como passo do usuário |
 | A26 | A `/ship-ticket` não escalava para Opus quando o review de uma execução em Sonnet achava bug de correção. O passo 6 fazia a chamada de fix com o modelo do passo 4, e a regra ficava no passo 7, que o fluxo só alcança quando o implementer volta `stuck`. No #5, dois bugs de correção foram corrigidos em Sonnet | relatório da S7; `templates/project/.claude/skills/ship-ticket/SKILL.md`, passos 6 e 7 | Corrigido no template (e5c9cd6): o passo 6 confere o passo 7 antes da chamada de fix, e um finding que os dois reviews relatam recebe um veredito só. O projeto recebe a skill num PR `docs/` junto com a limpeza dos primeiros itens "Unverified". Até lá, os prompts de abertura reforçam a regra |
+| A27 | A `/ship-ticket` não define "bug de correção", e é isso que decide a escalada. No #6, três fixes de qualidade de teste (isolamento do `VERCEL`, cobertura da A1.7 e parser do inventário) ficaram fora da escalada por julgamento da sessão | relatório da S8; corpo do PR #28 | Aberto, 1 ocorrência. A sessão acompanhada concorda com a classificação. Candidato: a skill define bug de correção como comportamento errado do produto, e falha de teste fica de fora |
+| A28 | O `mattpocock-skills:code-review` exige que a sessão monte à mão a lista das fontes de padrões e os dois prompts de subagente, enquanto o `/code-review` embutido devolve os findings direto | relatório da S8 | Aberto, 1 ocorrência. Candidato: a `/ship-ticket` lista as fontes de padrões do projeto (`CODING_STANDARDS.md`, `CLAUDE.md` e as skills pré-carregadas) na chamada do review |
 
 ## Cota por fase
 
@@ -161,6 +164,7 @@ Uma linha por sessão, copiada do relatório.
 | S5 | F5 da spec A | Opus | não medido → 20% (49,2%/h nos últimos 24 min, incluindo a sessão acompanhada) | 3% (fim da S4) → 8% |
 | S6 | Sincronia do harness (R0.2d) | Sonnet | 20% (fim da S5) → 25% (30%/h nos últimos 50 min) | 8% → 9% |
 | S7 | F6 + F7 do #5 | Sonnet | não medido (a sessão atravessou o fim de semana) | 9% (fim da S6) → 10% |
+| S8 | F6 + F7 do #6 | Sonnet | não medido → 16% (15,7%/h nos últimos 57 min) | 10% (fim da S7) → 12% |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -482,3 +486,23 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - 15 findings num ticket de configuração de lint. No piloto, foram 29 em 5 tickets;
   - cota: um ticket em Sonnet custou cerca de 1 ponto da semana.
 - **Cota:** 5 h não medido · semana 9% (fim da S6) → 10%.
+
+### 23/11/2026 · Sessão 8 · F6 + F7 · R0 (spec A) · ticket #6, PR #28
+
+- **Resumo:** o #6 (configuração validada na inicialização e inventário de variáveis) saiu no PR #28, com os commits `d8252bc` (feat) e `2512948` (fix). Os reviews deram 16 findings: 3 fix, 8 accept e 5 reject. A aplicação compilada recusa subir sem as variáveis e cita os nomes, sem os valores. A dependência `zod` entrou por `pnpm add`.
+- **Portão:** o merge do PR #28 está pendente e é do usuário. A sessão acompanhada recomenda o merge.
+- **Conferência (Definition of Done):**
+  - teste vermelho → verde no seam → ok pelo relatório e pelo corpo do PR: cada fix descreve o vermelho e o verde;
+  - `pnpm lint`, `pnpm typecheck` e `pnpm test` com o comando e a saída → ok (76 testes), mais `pnpm build` e `next start` sem variáveis;
+  - commit `feat(#6)` → ok;
+  - `ASSUMPTION:` no ticket → ok: 5, num comentário só;
+  - todo finding com veredito → ok, tabela no corpo do PR. O finding que os dois reviews relataram recebeu um veredito só;
+  - PR com `Closes #6` e CI verde → ok, conferido;
+  - linha `Métricas:` → ok: `modelo=sonnet · findings=3/8/5 · assumptions=5 · ci-vermelho=0`;
+  - escalada → não se aplica: os 3 fixes corrigem testes, não o comportamento do produto. A sessão acompanhada concorda.
+- **Sinais:**
+  - 5 `ASSUMPTION:` na mesma área (configuração). Todas são fáceis de reverter, mas uma pesa na segurança: aceitar `sslmode=require`. Foi para "Levar à spec B e à R1", com as fontes;
+  - A27 e A28 novos: a definição de bug de correção e a montagem manual do review do Matt;
+  - a ordem do prompt de abertura venceu a do passo 7 da skill do projeto, como previsto até a sincronia (A26);
+  - acumulado na spec A: 2 tickets, 31 findings (9 fix, 14 accept, 8 reject), 5 `ASSUMPTION:` e nenhuma escalada.
+- **Cota:** 5 h não medido → 16% · semana 10% (fim da S7) → 12%.
