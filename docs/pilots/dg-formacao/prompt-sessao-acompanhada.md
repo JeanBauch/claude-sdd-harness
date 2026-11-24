@@ -86,6 +86,8 @@ Fora de escopo: <o que fica para outra sessão>
 Ao terminar: peça ao usuário para rodar /relatorio-sessao (a skill só abre pelo comando).
 
 Marque com "(no PC)" o passo que exige o computador, como os comandos que só rodam no terminal local ou um push feito pelo usuário. O usuário acompanha as sessões pelo celular.
+
+No prompt de um ticket, não copie os critérios de aceite: cite o número do ticket, que é autocontido e é a fonte. Um critério copiado da spec ou da tabela de itens "Unverified" pode ser de outro ticket (A33).
 </formato_abertura>
 
 <primeira_tarefa>
