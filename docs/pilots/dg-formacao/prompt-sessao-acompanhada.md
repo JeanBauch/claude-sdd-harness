@@ -39,7 +39,8 @@ Toda sessão acompanhada começa assim:
    - `gh issue list -R JeanBauch/dg-formacao --state open --json number,title,labels`;
    - `gh pr list -R JeanBauch/dg-formacao --state open --json number,title`, porque merge pendente é decisão do usuário;
    - `git -C F:/Projetos/dg-formacao log --oneline -10`;
-   - `git -C f:/Projetos/IA log --oneline origin/main..HEAD`, para ver os commits do harness ainda sem push.
+   - `git -C f:/Projetos/IA log --oneline origin/main..HEAD`, para ver os commits do harness ainda sem push;
+   - `gh run list -R JeanBauch/claude-sdd-harness --limit 1 --json conclusion,headSha`, porque o CI do harness vermelho passa despercebido (A35). Depois de cada push do harness, confira o run do commit.
 2. Resuma em até 5 linhas: a fase atual, o último portão, o próximo passo e as decisões pendentes.
 
 O ritual está pronto quando esse resumo cita só o que os arquivos, o `gh` e o `git` mostraram.
