@@ -23,6 +23,7 @@ Check each of these. If any fails, stop and say which one:
 - `git switch main` and `git pull --ff-only` succeed.
 - The ticket is open and labelled `type:ticket`, and every `blockedBy` issue is closed.
 - Its parent spec has `ready-for-agent`.
+- The local services the tests need are up: if the project's `CLAUDE.md` lists a command that starts them (a database container, for example), run it and check that it succeeds.
 
 Note whether the ticket has the `model:opus` label.
 
