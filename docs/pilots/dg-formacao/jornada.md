@@ -68,7 +68,7 @@ Cada item vira critério de um ticket do R0. Quando o item se confirmar, a linha
 
 | # | Skill | Item a confirmar | Critério | Resultado |
 | --- | --- | --- | --- | --- |
-| U1 | data-layer | O drizzle-kit emite `.op('extensions.gin_trgm_ops')` no SQL do índice exatamente como escrito | #3 A1.9 (schema descartável, fora do commit; o índice real entra na R1) → #7 | — |
+| U1 | data-layer | O drizzle-kit emite `.op('extensions.gin_trgm_ops')` no SQL do índice exatamente como escrito | #3 A1.9 (schema descartável, fora do commit; o índice real entra na R1) → #7 | Confirmado no #7 (S9, PR #29): o SQL gerado traz `extensions.gin_trgm_ops` exatamente como escrito. A linha sai da skill no PR `docs/` depois do #8 |
 | U2 | data-layer | O tipo de coluna que o CLI do Better Auth gera para `user.id` quando `generateId` devolve UUID | #3 A2.6 → #8 | — |
 | U3 | auth-identity | `schemaName: 'app'` no adapter põe todas as tabelas do Better Auth em `app`, inclusive os campos do plugin admin e `rateLimit` | #3 A2.5 → #8 | — |
 | U4 | auth-identity | O plugin admin guarda vários papéis separados por vírgula em `role` e respeita todos | #3 A4.8 → #19 | — |
@@ -98,6 +98,14 @@ U3 e U4 se sobrepõem ao item 3 das verificações do R0 (seção 10.4). A spec 
 - **Conflito nos requisitos:** a seção 9.5 e a CONFIG.md da skill `auth-identity` mantêm o IP na sessão, porque o rate limit depende dele. Já o item 3 da seção 10.4 pede para verificar que "o registro de IP na sessão pode ser desligado". Decidir qual vale e corrigir o outro lado.
 - **A decidir:** a ADR-005 (proposta) e os itens "Proposto" da seção 1.5 (permissões no código, refinamentos técnicos e as fatias da 10.4).
 
+## Levar à retro da spec A
+
+Correções das skills do projeto e decisões que saíram dos tickets. Os atritos do harness ficam em "Atritos do harness".
+
+- **Guia de migrations da `data-layer` (NEEDS-DECISION do #7):** a primeira migration passa a ser gerada pelo drizzle-kit a partir do schema `app`, com o SQL reescrito à mão, no lugar da migration `--custom` vazia. A migration vazia copia o snapshot anterior, que está vazio, e a geração seguinte tenta criar de novo o que ela criou. Decisão do usuário.
+- **Outras divergências da `data-layer` com o #7:** a skill diz que o `DATABASE_URL_DIRECT` serve "só ao drizzle-kit e aos backups" e que as migrations rodam "uma vez por execução", e o #7 fez diferente (relatório da S9). O retro confere no PR #29 e corrige a skill ou o código.
+- **Actions fixadas por tag no `ci.yml`:** o `CODING_STANDARDS.md` do projeto exige SHA (RNF-SEG-13). A divergência veio do template (A32) e se corrige num PR próprio.
+
 ## Levar à spec B e à R1
 
 Saiu da análise de registros, auditoria e cotas gratuitas que a sessão acompanhada fez a pedido do usuário (entrada da S3). Os itens da spec A já estão na #3.
@@ -110,7 +118,9 @@ Saiu da análise de registros, auditoria e cotas gratuitas que a sessão acompan
 - **B3:** parte 2 do script de papéis depois das migrations; conferir se o pooler do Supabase aceita os papéis próprios.
 - **Restauração (9.12.9 e 9.12.11):** o diário das migrations fica no schema `app` e entra no dump. Rodar a primeira migration antes do `pg_restore` pode colidir com ele; o ensaio de restauração confere.
 - **Job diário:** a limpeza própria das linhas vencidas do rate limit (A2.21) e a do registro de segurança.
-- **TLS do banco em staging e produção:** a validação do #6 aceita `sslmode` com `require`, `verify-ca` ou `verify-full` (ASSUMPTION do #6). O Supabase recomenda `verify-full` com a CA do projeto (docs "Postgres SSL Enforcement"). Para o postgres.js, as fontes divergem sobre o que `require` faz: só cifra ou também confere o certificado. Conferir no código-fonte do pacote depois que o #7 instalá-lo, e decidir na spec B se a validação passa a exigir `verify-full`.
+- **TLS do banco em staging e produção:** a validação do #6 aceita `sslmode` com `require`, `verify-ca` ou `verify-full` (ASSUMPTION do #6). O Supabase recomenda `verify-full` com a CA do projeto (docs "Postgres SSL Enforcement"). No postgres.js 3.4.9, que o #7 instalou, o código da conexão liga `rejectUnauthorized = false` para `require`, `allow` e `prefer`: a conexão é cifrada, mas aceita qualquer certificado. `verify-ca` e `verify-full` usam a verificação padrão do Node (cadeia e nome do host) contra as CAs do sistema, e a CA do Supabase não está nelas: o driver precisa receber a CA do projeto. Decidir na spec B: a validação recusa `require` em staging e produção, e a CA entra como configuração.
+- **Variáveis dos scripts de banco:** ficaram fora do inventário de variáveis do #6 (ASSUMPTION do #7). A spec B decide onde inventariá-las.
+- **TEMP no papel da aplicação:** o `dg_app` ainda cria tabelas temporárias, pelo direito `TEMPORARY` que o Postgres dá a PUBLIC em todo banco (ASSUMPTION do #7, que o usuário confirma no PR #29). No Supabase, revogar mexe no PUBLIC de um banco que os papéis do próprio Supabase usam. Decidir junto da parte 1 do script de papéis em staging e produção.
 - **F3 da spec B:** o prompt leva a categoria "capacidade e cotas" (A18).
 - **R1:** o `search_misses` repete o padrão do registro de segurança (visitante anônimo, termo aleatório). A spec da R1 traz tamanho máximo do termo e teto de termos por dia.
 
@@ -148,6 +158,10 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A26 | A `/ship-ticket` não escalava para Opus quando o review de uma execução em Sonnet achava bug de correção. O passo 6 fazia a chamada de fix com o modelo do passo 4, e a regra ficava no passo 7, que o fluxo só alcança quando o implementer volta `stuck`. No #5, dois bugs de correção foram corrigidos em Sonnet | relatório da S7; `templates/project/.claude/skills/ship-ticket/SKILL.md`, passos 6 e 7 | Corrigido no template (e5c9cd6): o passo 6 confere o passo 7 antes da chamada de fix, e um finding que os dois reviews relatam recebe um veredito só. O projeto recebe a skill num PR `docs/` junto com a limpeza dos primeiros itens "Unverified". Até lá, os prompts de abertura reforçam a regra |
 | A27 | A `/ship-ticket` não define "bug de correção", e é isso que decide a escalada. No #6, três fixes de qualidade de teste (isolamento do `VERCEL`, cobertura da A1.7 e parser do inventário) ficaram fora da escalada por julgamento da sessão | relatório da S8; corpo do PR #28 | Aberto, 1 ocorrência. A sessão acompanhada concorda com a classificação. Candidato: a skill define bug de correção como comportamento errado do produto, e falha de teste fica de fora |
 | A28 | O `mattpocock-skills:code-review` exige que a sessão monte à mão a lista das fontes de padrões e os dois prompts de subagente, enquanto o `/code-review` embutido devolve os findings direto | relatório da S8 | Aberto, 1 ocorrência. Candidato: a `/ship-ticket` lista as fontes de padrões do projeto (`CODING_STANDARDS.md`, `CLAUDE.md` e as skills pré-carregadas) na chamada do review |
+| A29 | O implementer mandava editar a ASSUMPTION antiga, com `gh api` quando o comentário já não é o último. O `settings.json` do projeto só libera `gh issue *`, e o sistema de permissões negou a edição no #7 | relatório da S9; comentários do #7 | Corrigido no template (`3bfb08f`): a ASSUMPTION nova vai num comentário novo, que começa com `ASSUMPTION (substitui <url>):`, e a `/ship-ticket` conta itens, com o substituído uma vez só. No #7, o usuário escolheu o mesmo caminho. O projeto recebe a correção no PR `docs/` do A26. Liberar o `gh api` ficou descartado, porque ele alcança merge e ruleset |
+| A30 | O verify-gate roda `vitest related`, que segue o grafo de imports. Quando só mudam arquivos fora dele, como o script de papéis (rodado como processo) ou o SQL das migrations, os testes de banco não rodam no ciclo rápido. O passo 5 da `/ship-ticket` e o CI rodam a suíte inteira | relatório da S9 | Aberto, 1 ocorrência. Candidato, a pesquisar antes: o projeto associa caminhos fora do grafo a um projeto do Vitest, e o verify-gate roda esse projeto. Mudança de hook, teste primeiro |
+| A31 | Com o banco desligado, o `vitest related` imprime "No affected test files found, exiting with code 0" antes do erro da A1.10, embora saia com 1. A saída engana quem lê só o começo | relatório da S9 | Aberto, 1 ocorrência. Conferir junto do A30, que mexe na mesma chamada |
+| A32 | O `ci.yml` do template fixa as actions por tag (`actions/checkout@v7`, `pnpm/action-setup@v6` e `actions/setup-node@v7`), e o `CODING_STANDARDS.md` do projeto exige SHA (RNF-SEG-13). O projeto herdou a divergência | relatório da S9; `templates/project/.github/workflows/ci.yml:21-23` | Aberto. Candidato: o template fixa por SHA, com a tag em comentário. No projeto, a correção é um PR próprio |
 
 ## Cota por fase
 
@@ -165,6 +179,7 @@ Uma linha por sessão, copiada do relatório.
 | S6 | Sincronia do harness (R0.2d) | Sonnet | 20% (fim da S5) → 25% (30%/h nos últimos 50 min) | 8% → 9% |
 | S7 | F6 + F7 do #5 | Sonnet | não medido (a sessão atravessou o fim de semana) | 9% (fim da S6) → 10% |
 | S8 | F6 + F7 do #6 | Sonnet | não medido → 16% (15,7%/h nos últimos 57 min) | 10% (fim da S7) → 12% |
+| S9 | F6 + F7 do #7 | Opus | não medido → 71% (22,4%/h nas últimas 2 h 19 min; projeção de 100% antes da virada) | 12% (fim da S8) → 20% |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -506,3 +521,26 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - a ordem do prompt de abertura venceu a do passo 7 da skill do projeto, como previsto até a sincronia (A26);
   - acumulado na spec A: 2 tickets, 31 findings (9 fix, 14 accept, 8 reject), 5 `ASSUMPTION:` e nenhuma escalada.
 - **Cota:** 5 h não medido → 16% · semana 10% (fim da S7) → 12%.
+
+### 23/11/2026 · Sessão 9 · F6 + F7 · R0 (spec A) · ticket #7, PR #29
+
+- **Resumo:** o #7 (Postgres local e de CI, migrations no schema `app` e papéis do banco) saiu no PR #29, com os commits `b8cd3a3` (feat) e `0384ae3` (fix). O implementer rodou em Opus, pelo label. Os reviews deram 29 findings: 10 fix, 13 accept e 6 reject. Oito dos fix eram bugs de correção, um deles de segurança: a porta do Postgres local ficava aberta em todas as interfaces. O U1 se confirmou.
+- **Portão:** o merge do PR #29 está pendente e é do usuário. Antes dele, o usuário confirma no PR a ASSUMPTION das tabelas TEMP. A sessão acompanhada recomenda confirmar e fazer o merge.
+- **Conferência (Definition of Done):**
+  - teste vermelho → verde no seam → ok, pelo corpo do PR. Na A1.2 e na A1.14, os testes passaram antes do código; o implementer forçou a falha de propósito e reverteu;
+  - `pnpm lint`, `pnpm typecheck` e `pnpm test` com o comando e a saída → ok (106 testes), mais `format:check`;
+  - commit `feat(#7)` → ok (`b8cd3a3`), mais o `fix(#7)` dos findings;
+  - `ASSUMPTION:` no ticket → ok: 9 itens, um deles substituído por um comentário novo (A29);
+  - todo finding com veredito → ok, tabela no corpo do PR;
+  - PR com `Closes #7` e CI verde → ok, conferido: os 4 checks com SUCCESS, agora com o Postgres no CI;
+  - linha `Métricas:` → ok: `modelo=opus · findings=10/13/6 · assumptions=9 · ci-vermelho=0`;
+  - U1 com comando e saída no PR → ok;
+  - escalada → não se aplica: Opus desde o início.
+- **Sinais:**
+  - 9 `ASSUMPTION:`, o maior número até aqui. A maioria é convenção do ambiente local e fácil de reverter. Duas foram para "Levar à spec B e à R1" (variáveis dos scripts de banco e TEMP);
+  - oito bugs de correção numa execução em Opus: os reviews continuam achando bug no modelo maior;
+  - a dúvida da TLS saiu do código do postgres.js 3.4.9: `require` cifra sem conferir o certificado;
+  - A29 novo e já corrigido no template (`3bfb08f`); A30, A31 e A32 novos. As divergências da `data-layer` e o NEEDS-DECISION do guia de migrations foram para "Levar à retro da spec A";
+  - cota: o #7 em Opus custou 8 pontos da semana, contra 1 a 2 dos tickets em Sonnet, e levou a janela de 5 h a 71%, com projeção de 100% antes da virada. Restam 18 tickets, 12 com `model:opus`: pela média, cerca de 100 pontos da semana. A spec A atravessa ao menos uma virada semanal, e cada ticket em Opus pede uma janela de 5 h própria;
+  - acumulado na spec A: 3 tickets, 60 findings (19 fix, 27 accept, 14 reject), 14 `ASSUMPTION:` e nenhuma escalada (uma devida no #5).
+- **Cota:** 5 h não medido → 71% · semana 12% (fim da S8) → 20%, incluindo a sessão acompanhada.
