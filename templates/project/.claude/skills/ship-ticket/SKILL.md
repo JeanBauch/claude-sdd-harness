@@ -100,7 +100,7 @@ Comment on the ticket with one line:
 
 `Métricas: modelo=<sonnet|opus|sonnet→opus> · findings=<fix>/<accept>/<reject> · assumptions=<n> · ci-vermelho=<n>`
 
-`assumptions` counts the ASSUMPTION comments on the ticket now, after edits, so a replaced assumption counts once.
+`assumptions` counts the ASSUMPTION items on the ticket. An item that a later `ASSUMPTION (substitui ...)` comment replaces counts once.
 
 Then tell the human:
 
