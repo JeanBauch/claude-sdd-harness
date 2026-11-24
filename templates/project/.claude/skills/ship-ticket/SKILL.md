@@ -43,9 +43,9 @@ Read the report's `Status`:
 
 ## 5. Verify
 
-Run `pnpm lint`, `pnpm typecheck` and `pnpm test` yourself, each on its own. `git log main..HEAD --oneline` must show at least one `feat(#<n>)` commit.
+Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck` and `pnpm test` yourself, each on its own, with `CI=true` set as the CI sets it (in Bash: `CI=true pnpm test`). Some tools behave differently under `CI=true` (typescript-eslint, for one), so a run without it does not predict the CI. `git log main..HEAD --oneline` must show at least one `feat(#<n>)` commit.
 
-Done when all three exit 0. Their output is the PR's evidence.
+Done when all four exit 0. Their output is the PR's evidence.
 
 ## 6. Review
 
@@ -83,7 +83,7 @@ Escalate once per ticket. If Opus also returns `stuck`, stop and hand the failin
 
 ## 9. CI
 
-`gh pr checks <pr> --watch`. When it goes red:
+`gh pr checks <pr> --watch`. Right after a push, it can exit 1 with "no checks reported" because GitHub has not registered the checks yet: that is not a failure. Run it again once `gh pr checks <pr>` lists them. When it goes red:
 
 1. Read the failure with `gh run view <run-id> --log-failed`.
 2. Fix it through the implementer in fix mode.
