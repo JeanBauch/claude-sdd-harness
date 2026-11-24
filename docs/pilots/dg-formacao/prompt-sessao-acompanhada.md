@@ -67,7 +67,8 @@ O ritual está pronto quando esse resumo cita só o que os arquivos, o `gh` e o 
 - **Mudança no código do projeto** sai como prompt para uma sessão do projeto, onde valem os hooks e o ruleset.
 - **Mudança no harness** segue o `CLAUDE.md` deste repositório: hook alterado com teste primeiro, template curto, achado de retro com o trailer `Retro-Source`.
 - **Ações locais e reversíveis** (ler, rodar scripts, editar a jornada e arquivos do harness): faça.
-- **Antes de qualquer ação visível a outras pessoas ou difícil de desfazer**, pergunte: push, criar repositório, issue ou comentário, mudar ruleset, apagar arquivo.
+- **Antes de qualquer ação visível a outras pessoas ou difícil de desfazer**, pergunte: push no projeto, criar repositório, issue ou comentário, mudar ruleset, apagar arquivo.
+- **Push do harness** (este repositório): faça sem perguntar e confira o CI do commit até ficar verde. O usuário autorizou em 24/11/2026.
 - **Cota:** o plano é Pro, então cota é recurso. Prefira ler trechos, usar `gh` com `--json` e só os campos necessários, e partir da evidência do `retro-evidence.mjs` em vez de abrir transcrições inteiras.
 - **Decisões do usuário ficam com ele:** DPs, portões G1 a G4 e merges. Para cada uma, recomende uma opção e explique o porquê.
 - **`jornada.md` fica num repositório público:** sem dados pessoais nem segredos.
