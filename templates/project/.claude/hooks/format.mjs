@@ -1,13 +1,24 @@
 #!/usr/bin/env node
 // PostToolUse (Edit|Write) hook: formats the edited file with the project's Prettier. Never blocks.
 // Files outside the project (a scratchpad script, another repository) are left alone.
+import { realpathSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { gitRoot, localBin, readStdinJson, runNode } from './lib.mjs'
 
 const FORMATTABLE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json|css|scss|md|mdx|yml|yaml|html)$/
 
+// The real path, so that a junction, a symlink or a Windows 8.3 short name compares equal to the
+// long path git prints. A path that does not exist is compared as given.
+const realPath = (path) => {
+  try {
+    return realpathSync.native(path)
+  } catch {
+    return path
+  }
+}
+
 const insideRoot = (root, file) => {
-  const rel = relative(root, resolve(root, file))
+  const rel = relative(realPath(root), realPath(resolve(root, file)))
   return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel)
 }
 

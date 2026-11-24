@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { git, gitRepo, installStubs, runHook, tempDir, writeFile } from './helpers.mjs'
 
@@ -155,6 +155,18 @@ test('format: runs prettier on the edited file and never blocks', () => {
   const root = gitRepo()
   installStubs(root, { prettier: { exit: 1 } })
   const file = join(root, 'src', 'a.ts')
+  writeFileSync(file, 'export const   a = 1\n')
+  const r = runHook('format.mjs', { hook_event_name: 'PostToolUse', tool_name: 'Edit', tool_input: { file_path: file }, cwd: root })
+  assert.equal(r.code, 0, r.stderr)
+  assert.match(calls(root), /^prettier --write --ignore-unknown .*a\.ts/m)
+})
+
+test('format: runs prettier when the file path names the project folder another way, such as a junction or an 8.3 short name', () => {
+  const root = gitRepo()
+  installStubs(root, { prettier: { exit: 0 } })
+  const alias = join(tempDir(), 'alias')
+  symlinkSync(root, alias, 'junction')
+  const file = join(alias, 'src', 'a.ts')
   writeFileSync(file, 'export const   a = 1\n')
   const r = runHook('format.mjs', { hook_event_name: 'PostToolUse', tool_name: 'Edit', tool_input: { file_path: file }, cwd: root })
   assert.equal(r.code, 0, r.stderr)
