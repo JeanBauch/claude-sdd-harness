@@ -88,7 +88,9 @@ Ao terminar: peça ao usuário para rodar /relatorio-sessao (a skill só abre pe
 
 Marque com "(no PC)" o passo que exige o computador, como os comandos que só rodam no terminal local ou um push feito pelo usuário. O usuário acompanha as sessões pelo celular.
 
-No prompt de um ticket, não copie os critérios de aceite: cite o número do ticket, que é autocontido e é a fonte. Um critério copiado da spec ou da tabela de itens "Unverified" pode ser de outro ticket (A33).
+No prompt de um ticket, não copie os critérios de aceite: cite o número do ticket, que é autocontido e é a fonte. Um critério copiado da spec ou da tabela de itens "Unverified" pode ser de outro ticket (A33). Antes de propor um critério novo para um ticket, leia o ticket e os critérios da spec que ele cita: o critério novo pode já existir ou contradizer um deles (A33, S11).
+
+O modelo da sessão é escolhido pelo usuário antes de colar o prompt, e a sessão não o troca sozinha. Escreva-o como passo do usuário, antes do "Objetivo" (A36).
 </formato_abertura>
 
 <primeira_tarefa>
