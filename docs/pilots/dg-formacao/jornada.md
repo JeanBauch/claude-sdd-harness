@@ -108,12 +108,16 @@ Correções das skills do projeto e decisões que saíram dos tickets. Os atrito
 - **Actions fixadas por tag no `ci.yml`:** o `CODING_STANDARDS.md` do projeto exige SHA (RNF-SEG-13). A divergência veio do template (A32) e se corrige num PR próprio.
 - **Campos que a biblioteca aceita do cliente:** o F3 da spec A não pegou que o cadastro do Better Auth grava `name` e `image` como o cliente manda. O review do #8 pegou (CR3 e CR4, PR #30). Candidato: a `auth-identity` lista, para cada rota que o projeto liga, as entradas que o Better Auth aceita e o que o projeto recusa; e o prompt F3 pergunta pelos campos que a biblioteca grava sem validar.
 
+- **Para a skill `testing-stack` (R0.s):** no Docker Desktop do Windows, cada commit do banco de teste levava cerca de 80 ms, e o teste de volume da NF-5 estourava o tempo limite. O banco de teste passou a usar `synchronous_commit = off` (ASSUMPTION 11 do #9, `src/test/db/setup.ts`).
+
 ## Levar aos tickets seguintes da spec A
 
 O que um ticket descobriu e outro precisa receber. Cada item entra no prompt de abertura do ticket indicado.
 
 - **#12, logs sem dados pessoais (NEEDS-DECISION do #8, RNF-OBS-01):** no Better Auth 1.7.15, o roteador repassa ao better-call 1.4.4 todo erro que não é `APIError`, e o better-call o imprime inteiro com `console.error("# SERVER_ERROR: ", error)` (`better-call/dist/router.mjs:93`). O `onAPIError.onError` não evita isso, porque devolve nada e o better-call segue para o `console.error` (`better-auth/dist/api/index.mjs:196-205`). Só o `onAPIError.throw` tira o erro do roteador, e o `APIError` continua virando resposta. O `DrizzleQueryError` do Drizzle 0.45.4 põe os parâmetros da consulta na mensagem (`drizzle-orm/errors.js:12`). O `logger.log` próprio substitui o console nas chamadas internas da biblioteca (`@better-auth/core/dist/env/logger.mjs:63-69`). Decidido pelo usuário em 24/11 (D2): o #12 liga o `onAPIError.throw`, a rota do Next captura o erro e registra só o nome e o código do Postgres, um `logger.log` próprio reduz do mesmo jeito os erros que a biblioteca registra, e um teste força uma falha no banco e confere a saída do console.
 - **#12, rota `/update-user`:** a rota da 1.7.15 aceita `name` e `image` do cliente (`better-auth/dist/api/routes/update-user.mjs:14-41`). Quando o #12 ligar o handler, ela vai aceitar o que o cadastro do #8 recusa: imagem de terceiros (RNF-SEG-12) e nome vazio ou com mais de 100 caracteres. O #12 desliga a rota com `disabledPaths`, se nenhum ticket da spec A a usar, ou aplica nela as regras do cadastro. Correção na S11: a A4.17 da spec, que é do #12, já desliga a rota (404). O critério (b) que a S11 publicou no #12 (issuecomment-7136201442) pede "a mesma resposta que o cadastro" (400) e contradiz a A4.17. O erro é da sessão acompanhada (A33). A A4.17 vale, e o comentário de correção saiu na continuação da S11 (issuecomment-7138444046).
+- **#11, #12, #17, #18 e #19, IP no registro de segurança:** passam ao gravador do #9 o IP bruto do cliente, que o gravador reduz à faixa e grava com o IPv4 mapeado na forma IPv4 (notas e findings do PR #32; ASSUMPTION 6 e 7 do #9).
+- **#25, expurgo (A5.7):** a regra de lint da A5.6 isenta só o arquivo que grava no registro de segurança. O expurgo acrescenta o seu arquivo à isenção (ASSUMPTION 10 do #9, substituída; "Risco do merge" do PR #32).
 - **#14, #20 e #22, Contas criadas fora do cadastro:** o gancho do #8 lê as declarações do pedido de cadastro e apaga a Conta que não as traz (ASSUMPTION 5 do #8). Os seeds e o convite precisam de um caminho próprio para criar a Conta.
 
 ## Levar à spec B e à R1
@@ -178,7 +182,9 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A34 | O preflight da `/ship-ticket` não sobe os serviços locais. Desde o #7, os testes de banco precisam do Postgres no Docker, e o implementer do #8 teve de rodar `pnpm db:up` por conta própria. O `CLAUDE.md` do projeto não lista o comando | relatório da S10; `templates/project/.claude/skills/ship-ticket/SKILL.md`, passo 2 | Corrigido no template (`d6c4af9`): o preflight roda o comando de serviços locais que o `CLAUDE.md` do projeto listar. O projeto recebeu o passo e a linha do `pnpm db:up` no `CLAUDE.md` pelo PR #31 (S11) |
 | A35 | O CI do harness ficou vermelho de 21/11 a 24/11, em 6 pushes, sem que ninguém notasse. O ritual da sessão acompanhada não conferia o CI do harness, e os pushes foram feitos sem olhar o run | `gh run list` do harness (primeira falha no `1ee8b0c`, que levou o `ea8b7d8` ao GitHub); A22 | Corrigido no prompt da sessão acompanhada: o ritual lista o último run do harness, e cada push confere o run do commit |
 | A36 | O prompt de abertura da S11 dizia "Rode em Sonnet", mas a sessão não troca o próprio modelo. Ela rodou em Opus, e o modelo é escolhido pelo usuário antes de colar o prompt | relatório da S11 | Corrigido no formato de abertura: o modelo vira passo do usuário, antes de colar |
-| A37 | O `gh pr checks --watch` logo depois do `gh pr create` sai com 1 e "no checks reported", porque o GitHub ainda não registrou os checks. O passo 9 da `/ship-ticket` não prevê isso; a S11 esperou os checks aparecerem e repetiu | relatório da S11 | Aberto, 1 ocorrência. Candidato: o passo 9 diz que "no checks reported" logo depois de abrir o PR não é falha, e manda repetir quando os checks aparecerem. Até lá, os prompts de abertura avisam |
+| A37 | O `gh pr checks --watch` logo depois do `gh pr create` sai com 1 e "no checks reported", porque o GitHub ainda não registrou os checks. O passo 9 da `/ship-ticket` não prevê isso; a S11 esperou os checks aparecerem e repetiu | relatório da S11 | Corrigido no template (`1ede57c`): o passo 9 diz que "no checks reported" logo depois de um push não é falha, e manda repetir quando os checks aparecerem. O projeto recebe na próxima sincronia; até lá, os prompts de abertura avisam |
+| A38 | O passo 5 da `/ship-ticket` roda `lint`, `typecheck` e `test` sem `CI=true` e sem `format:check`, e o CI roda os dois. No #9, o typescript-eslint mudou de comportamento com `CI=true` (inferência de passada única), e o primeiro CI ficou vermelho depois do verde local | relatório da S12; corpo do PR #32 ("Round vermelho do CI"); `templates/project/.github/workflows/ci.yml:28-31` | Corrigido no template (`1ede57c`): o passo 5 roda os quatro comandos com `CI=true`. O projeto recebe na próxima sincronia; até lá, os prompts de abertura pedem `CI=true` e `format:check` |
+| A39 | O lembrete "GitHub API rate limit exceeded" do Claude Code apareceu na S12 e na sessão acompanhada logo depois de ler o #9, com a cota quase cheia (`gh api rate_limit`: 4956/5000 e 4992/5000). Nas duas vezes, a saída lida falava de rate limit (o evento `rate_limited` do #9). Hipótese: o lembrete reage ao texto da saída, não à cota | relatório da S12; sessão acompanhada de 24/11 | Aberto, fora do template: é comportamento do Claude Code. Os prompts dos tickets que falam de rate limit (#12, #17, #18) mandam conferir com `gh api rate_limit`, que não gasta cota, e seguir |
 
 ## Cota por fase
 
@@ -199,6 +205,7 @@ Uma linha por sessão, copiada do relatório.
 | S9 | F6 + F7 do #7 | Opus | não medido → 71% (22,4%/h nas últimas 2 h 19 min; projeção de 100% antes da virada) | 12% (fim da S8) → 20% |
 | S10 | F6 + F7 do #8 | Opus | não medido → 69% (36,6%/h nas últimas 1 h 52 min; projeção de 100% em cerca de 51 min, antes da virada das 14:50) | 20% (fim da S9) → 29% |
 | S11 | R0.3d, sincronia e "Unverified" | Opus (o prompt pedia Sonnet, A36) | 69% (fim da S10) → 88% (23,4%/h nas últimas 3 h 43 min, incluindo a sessão acompanhada; projeção de 100% em cerca de 31 min, antes da virada das 14:50) | 29% (fim da S10) → 32% |
+| S12 | F6 + F7 do #9 | Opus | janela nova (virada às 14:50; outra às 21:30) → 61% (34,2%/h nas últimas 1 h 45 min; projeção de 100% em cerca de 1 h 08 min) | 32% (fim da S11) → 41% |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -624,3 +631,26 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
 - **Conferência:** URL do comentário → ok; `grep -rn "outside its transaction"` mostra a linha → ok; `pnpm format:check` com saída 0 → ok; `gh pr checks 31 --watch` com os 4 checks verdes e saída 0 → ok.
 - **Sinais:** a sessão esperou os checks aparecerem antes do `gh pr checks`, e o aviso do A37 no prompt funcionou. Nenhum sinal novo.
 - **Cota:** não informada.
+
+### 24/11/2026 · Sessão 12 · F6 + F7 · R0 (spec A) · ticket #9, PR #32
+
+- **Resumo:** o #9 (registro de segurança agregado e registro de auditoria) saiu no PR #32, com os commits `b362704` (feat), `3fde89a` (fix dos findings) e `278a5e4` (fix do CI). Implementer em Opus, pelo label. Os reviews deram 17 findings: 9 fix, 6 accept e 2 reject. Foram quatro bugs de correção: o `first_at` podia ficar depois de uma ocorrência contada; o IPv4 mapeado era gravado na forma IPv6 e a busca pelo IPv4 não o achava; a regra de lint da A5.6 deixava passar chave computada, desestruturação, reexportação e arquivos JS; e o `afterAll` do teste de papéis não fechava as conexões se o truncate falhasse. O primeiro CI ficou vermelho (A38).
+- **Portão:** o merge do PR #32 está pendente e é do usuário. A sessão acompanhada recomenda o merge.
+- **Conferência (Definition of Done):**
+  - teste vermelho → verde no seam → ok, pelo corpo do PR: cada critério no seam 2, e a A5.6 no seam 4;
+  - `pnpm lint`, `pnpm typecheck` e `pnpm test` com o comando e a saída → ok (197 testes), mais `format:check` e `CI=true pnpm test`;
+  - commit `feat(#9)` → ok (`b362704`), mais os dois `fix(#9)`;
+  - `ASSUMPTION:` no ticket → ok: 11 itens, um deles substituído por comentário novo (A29);
+  - todo finding com veredito → ok, tabela no corpo do PR;
+  - PR com `Closes #9` e CI verde → ok, conferido: os 4 checks com SUCCESS, e o PR está CLEAN;
+  - linha `Métricas:` → ok: `modelo=opus · findings=9/6/2 · assumptions=11 · ci-vermelho=1`;
+  - escalada → não se aplica: Opus desde o início.
+- **Sinais:**
+  - primeiro `ci-vermelho` da spec A: o passo 5 da `/ship-ticket` não roda como o CI (A38, corrigido no template);
+  - quatro bugs de correção numa execução em Opus. Nos tickets em Opus, os reviews acharam 8 (#7), 1 (#8) e 4 (#9);
+  - o lembrete falso de rate limit (A39) apareceu também na sessão acompanhada, com a mesma causa provável;
+  - o #9 deixou notas para o #11, o #12, o #17, o #18, o #19 e o #25 (IP bruto e isenção da regra de lint). Foram para "Levar aos tickets seguintes da spec A";
+  - o banco de teste lento no Docker Desktop foi para a lista da skill `testing-stack`;
+  - acumulado na spec A: 5 tickets, 95 findings (39 fix, 40 accept, 16 reject), 39 `ASSUMPTION:`, nenhuma escalada (uma devida no #5) e 1 CI vermelho;
+  - cota: o #9 custou 9 pontos da semana. Restam 16 tickets, 10 com `model:opus`: cerca de 94 pontos pela média, contra 59 até a virada de sexta.
+- **Cota:** 5 h janela nova → 61% · semana 32% (fim da S11) → 41%.
