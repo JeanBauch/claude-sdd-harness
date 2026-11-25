@@ -119,6 +119,7 @@ O que um ticket descobriu e outro precisa receber. Cada item entra no prompt de 
 - **#11, #12, #17, #18 e #19, IP no registro de segurança:** passam ao gravador do #9 o IP bruto do cliente, que o gravador reduz à faixa e grava com o IPv4 mapeado na forma IPv4 (notas e findings do PR #32; ASSUMPTION 6 e 7 do #9).
 - **#25, expurgo (A5.7):** a regra de lint da A5.6 isenta só o arquivo que grava no registro de segurança. O expurgo acrescenta o seu arquivo à isenção (ASSUMPTION 10 do #9, substituída; "Risco do merge" do PR #32).
 - **#14, #20 e #22, Contas criadas fora do cadastro:** o gancho do #8 lê as declarações do pedido de cadastro e apaga a Conta que não as traz (ASSUMPTION 5 do #8). Os seeds e o convite precisam de um caminho próprio para criar a Conta.
+- **#19, papéis da equipe no registro de segurança:** o #10 fixou os papéis da equipe no domínio de auditoria, e o gravador lê o `user.role` atual no banco para decidir se a Conta é de equipe (finding 5 do PR #33, accept; ASSUMPTION 1 do #10). Quando o #19 criar a matriz de permissões, o gravador passa a ler dela.
 
 ## Levar à spec B e à R1
 
@@ -185,6 +186,8 @@ Candidatos à retro, cada um com o ponteiro da evidência. Ficam aqui até a ret
 | A37 | O `gh pr checks --watch` logo depois do `gh pr create` sai com 1 e "no checks reported", porque o GitHub ainda não registrou os checks. O passo 9 da `/ship-ticket` não prevê isso; a S11 esperou os checks aparecerem e repetiu | relatório da S11 | Corrigido no template (`1ede57c`): o passo 9 diz que "no checks reported" logo depois de um push não é falha, e manda repetir quando os checks aparecerem. O projeto recebe na próxima sincronia; até lá, os prompts de abertura avisam |
 | A38 | O passo 5 da `/ship-ticket` roda `lint`, `typecheck` e `test` sem `CI=true` e sem `format:check`, e o CI roda os dois. No #9, o typescript-eslint mudou de comportamento com `CI=true` (inferência de passada única), e o primeiro CI ficou vermelho depois do verde local | relatório da S12; corpo do PR #32 ("Round vermelho do CI"); `templates/project/.github/workflows/ci.yml:28-31` | Corrigido no template (`1ede57c`): o passo 5 roda os quatro comandos com `CI=true`. O projeto recebe na próxima sincronia; até lá, os prompts de abertura pedem `CI=true` e `format:check` |
 | A39 | O lembrete "GitHub API rate limit exceeded" do Claude Code apareceu na S12 e na sessão acompanhada logo depois de ler o #9, com a cota quase cheia (`gh api rate_limit`: 4956/5000 e 4992/5000). Nas duas vezes, a saída lida falava de rate limit (o evento `rate_limited` do #9). Hipótese: o lembrete reage ao texto da saída, não à cota | relatório da S12; sessão acompanhada de 24/11 | Aberto, fora do template: é comportamento do Claude Code. Os prompts dos tickets que falam de rate limit (#12, #17, #18) mandam conferir com `gh api rate_limit`, que não gasta cota, e seguir |
+| A40 | O verify-gate (Stop) roda cada vez que a sessão principal encerra o turno, inclusive quando ela só espera o implementer, que trabalha em segundo plano na mesma árvore. No #10, o `vitest related` do hook rodou junto da suíte do implementer, e o `globalSetup` do projeto apaga e recria o banco de teste a cada execução. O hook relatou falhas falsas em 3 disparos (`database "dg_formacao_test" does not exist`, `schema "app" does not exist`, linhas de outra execução nas asserções), e o implementer teve quedas de conexão. O classificador do modo auto negou à sessão e ao implementer a listagem dos processos `vitest` ("Undermining Oversight") | relatório da S13; `templates/project/.claude/hooks/verify-gate.mjs:109-113`; `src/test/db/setup.ts:64-65` do projeto | Aberto, 1 ocorrência. Dois lados: (1) harness: o portão não deveria julgar uma árvore que um subagente ainda edita. A pesquisar antes: o que a entrada do Stop informa sobre subagentes em segundo plano e se o subagente pode sinalizar que está trabalhando (hooks no frontmatter do agente). Mudança de hook, teste primeiro; (2) projeto: duas execuções simultâneas da suíte de banco se destroem (um banco só, papéis do cluster), item da skill `testing-stack`. Até lá, os prompts de abertura avisam que um bloqueio do verify-gate com o implementer rodando não pede ação |
+| A41 | O passo 9 da `/ship-ticket` não dizia com que modelo corrigir o CI, nem como ler um check do GitHub sem log de job. No #10, o CodeQL ficou vermelho com um alerta alto ("Clear-text logging of sensitive information"); a S13 tratou como rodada vermelha, corrigiu em Sonnet e não dispensou o alerta | relatório da S13; `issuecomment-7146243844` do #10 | Corrigido no template (`4d4188c`): o passo 9 lê os alertas abertos do PR com `gh api .../code-scanning/alerts?ref=refs/pull/<pr>/merge&state=open`, corrige com o modelo do passo 4 (o passo 7 escala o bug de correção) e deixa a dispensa do alerta para o humano. O projeto recebe na próxima sincronia |
 
 ## Cota por fase
 
@@ -206,6 +209,7 @@ Uma linha por sessão, copiada do relatório.
 | S10 | F6 + F7 do #8 | Opus | não medido → 69% (36,6%/h nas últimas 1 h 52 min; projeção de 100% em cerca de 51 min, antes da virada das 14:50) | 20% (fim da S9) → 29% |
 | S11 | R0.3d, sincronia e "Unverified" | Opus (o prompt pedia Sonnet, A36) | 69% (fim da S10) → 88% (23,4%/h nas últimas 3 h 43 min, incluindo a sessão acompanhada; projeção de 100% em cerca de 31 min, antes da virada das 14:50) | 29% (fim da S10) → 32% |
 | S12 | F6 + F7 do #9 | Opus | janela nova (virada às 14:50; outra às 21:30) → 61% (34,2%/h nas últimas 1 h 45 min; projeção de 100% em cerca de 1 h 08 min) | 32% (fim da S11) → 41% |
+| S13 | F6 + F7 do #10 | Sonnet → Opus (fix do review) | não informado | não informado |
 
 O `/usage` mede a conta inteira. Os números da S0b incluem a sessão acompanhada, que rodou em paralelo.
 
@@ -654,3 +658,26 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
   - acumulado na spec A: 5 tickets, 95 findings (39 fix, 40 accept, 16 reject), 39 `ASSUMPTION:`, nenhuma escalada (uma devida no #5) e 1 CI vermelho;
   - cota: o #9 custou 9 pontos da semana. Restam 16 tickets, 10 com `model:opus`: cerca de 94 pontos pela média, contra 59 até a virada de sexta.
 - **Cota:** 5 h janela nova → 61% · semana 32% (fim da S11) → 41%.
+
+### 24/11/2026 · Sessão 13 · F6 + F7 · R0 (spec A) · ticket #10, PR #33
+
+- **Resumo:** o #10 (teto diário do registro de segurança, com transbordo e aviso) saiu no PR #33, com os commits `9637750` (feat), `aedb021` (fix dos findings) e `eaf1838` (fix do CodeQL). A implementação rodou em Sonnet, porque o ticket não tem `model:opus`; o fix do review rodou em Opus, por escalada; o fix do CodeQL rodou em Sonnet. Os reviews deram 20 findings: 6 fix, 13 accept e 1 reject. O bug de correção: o aviso de teto atingido saía uma vez por evento simultâneo, e não uma vez por dia; o `code-review` e o eixo Spec o acharam. O CodeQL ficou vermelho em `aedb021` com um alerta alto de log em texto claro, corrigido com a retirada do teto do contexto do aviso, sem dispensar o alerta.
+- **Portão:** o merge do PR #33 está pendente e é do usuário. A sessão acompanhada recomenda o merge.
+- **Conferência (Definition of Done):**
+  - teste vermelho → verde no seam → ok, pelo corpo do PR: a A5.14 no seam 3 (configuração do teto) e no seam 2 (teto, transbordo, exceções e aviso);
+  - `format:check`, `lint`, `typecheck` e `test` com `CI=true`, com o comando e a saída → ok (247 testes), em `eaf1838`;
+  - commit `feat(#10)` → ok (`9637750`), mais os dois `fix(#10)`;
+  - `ASSUMPTION:` no ticket → ok: 6 itens (`issuecomment-7145468564`), dois deles substituídos por comentários novos (A29);
+  - todo finding com veredito → ok, tabela no corpo do PR;
+  - PR com `Closes #10` e CI verde → ok, conferido: os 4 checks com SUCCESS, e o PR está CLEAN;
+  - linha `Métricas:` → ok, conferida no #10: `modelo=sonnet→opus · findings=6/13/1 · assumptions=6 · ci-vermelho=1`;
+  - escalada → ok: comentário `Escalado para Opus` no #10 (`issuecomment-7145821421`), pelos passos 6 e 7 da `/ship-ticket` que o PR #31 sincronizou.
+- **Sinais:**
+  - primeira escalada da spec A, e ela funcionou como a correção do A26 previa: o bug de concorrência veio da execução em Sonnet, o review o achou e o fix rodou em Opus. É um dado para o A20, que segue para a retro: num ticket sem `model:opus`, o review e a escalada pegaram o bug de correção;
+  - segundo `ci-vermelho` da spec A, com causa nova: o CodeQL, que o passo 5 não reproduz (A41, corrigido no template em `4d4188c`);
+  - o verify-gate bloqueou 3 vezes com falhas falsas, por rodar a suíte de banco junto do implementer (A40). Na métrica "Bloqueios do verify-gate", o #10 conta 0 úteis e 3 de ruído;
+  - o passo 5 da `/ship-ticket` do projeto ainda não tem `CI=true` nem `format:check`, e o aviso do prompt cobriu a lacuna (A38). A próxima sincronia leva o A37, o A38, o A41 e, se já estiver corrigido, o A40;
+  - o relatório manda preencher a cota com `/quota` de novo (A10, segunda ocorrência);
+  - o #10 deixou uma nota para o #19 (papéis da equipe no gravador), que foi para "Levar aos tickets seguintes da spec A";
+  - acumulado na spec A: 6 tickets, 115 findings (45 fix, 53 accept, 17 reject), 45 `ASSUMPTION:`, 1 escalada (mais uma devida no #5) e 2 CI vermelhos.
+- **Cota:** não informada no relatório. O usuário informa pelo `/usage`, e a linha da S13 em "Cota por fase" recebe os números.
