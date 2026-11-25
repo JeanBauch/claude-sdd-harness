@@ -85,7 +85,7 @@ Escalate once per ticket. If Opus also returns `stuck`, stop and hand the failin
 
 `gh pr checks <pr> --watch`. Right after a push, it can exit 1 with "no checks reported" because GitHub has not registered the checks yet: that is not a failure. Run it again once `gh pr checks <pr>` lists them. When it goes red:
 
-1. Read the failure. For a workflow job, `gh run view <run-id> --log-failed`. For a code scanning check such as CodeQL, which has no job log, read the open alerts on the PR: `gh api "repos/{owner}/{repo}/code-scanning/alerts?ref=refs/pull/<pr>/merge&state=open"`.
+1. Read the failure. For a workflow job, `gh run view <run-id> --log-failed`. For a code scanning check such as CodeQL, which has no job log, read the open alerts on the PR: `gh api "repos/{owner}/{repo}/code-scanning/alerts?pr=<pr>&state=open"`. Filter by `pr`, not by `ref`: depending on the setup, CodeQL analyses the PR's head ref or its merge ref.
 2. Fix it through the implementer in fix mode, with the model of step 4; a failure that is a correctness bug escalates as in step 7. Fix a code scanning alert in the code: dismissing one on GitHub is the human's decision.
 3. Push, and watch again.
 
