@@ -143,6 +143,34 @@ test('passes when the project has no TypeScript or Vitest installed', () => {
   assert.equal(r.code, 0, r.stderr)
 })
 
+// Claude Code lists only in-flight work in `background_tasks` (empty when nothing is in flight).
+const task = (type) => ({ id: `task-${type}`, type, status: 'running', description: `${type} at work` })
+
+test('lets the stop through unchecked while a background agent may still be editing the tree', () => {
+  // DG Formação #10: the gate ran related tests while the implementer ran the suite, and the
+  // test database was dropped under it. The stop after the agent reports back is checked.
+  for (const type of ['subagent', 'teammate', 'workflow']) {
+    const root = gitRepo()
+    installStubs(root, { tsc: { exit: 2, out: 'error TS2322' }, vitest: { exit: 1, out: 'database does not exist' } })
+    writeFile(root, 'src/a.ts', "export const a: number = 'x'\n")
+    const waiting = runHook('verify-gate.mjs', { ...stop(root), background_tasks: [task(type)] })
+    assert.equal(waiting.code, 0, `${type}: ${waiting.stderr}`)
+    assert.equal(calls(root), '', type)
+    const done = runHook('verify-gate.mjs', { ...stop(root), background_tasks: [] })
+    assert.equal(done.code, 2, `${type}: a skipped stop must not be remembered as green`)
+    assert.match(done.stderr, /TS2322/)
+  }
+})
+
+test('still checks the stop when the background work is not an agent, such as a shell or a cloud session', () => {
+  const root = gitRepo()
+  installStubs(root, { tsc: { exit: 2, out: 'error TS2322' } })
+  writeFile(root, 'src/a.ts', "export const a: number = 'x'\n")
+  const r = runHook('verify-gate.mjs', { ...stop(root), background_tasks: [task('shell'), task('cloud session')] })
+  assert.equal(r.code, 2)
+  assert.match(r.stderr, /TS2322/)
+})
+
 test('can be switched off for a session with SDD_VERIFY_GATE=off', () => {
   const root = gitRepo()
   installStubs(root, { tsc: { exit: 2, out: 'error TS2322' } })

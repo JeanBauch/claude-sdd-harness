@@ -30,7 +30,7 @@ O script nunca sobrescreve arquivos existentes sem `--force`. Depois, numa sess�
 | Arquivo | Função |
 |---|---|
 | `.claude/settings.json` | Liga o plugin do Matt e desliga os plugins concorrentes (Superpowers e outros); permissões; hooks |
-| `.claude/hooks/verify-gate.mjs` | `Stop`: `prettier --check`, typecheck e `vitest related` nos arquivos alterados (os não commitados e, numa branch de feature, tudo o que foi commitado desde `main`); bloqueia o fim do turno se algo estiver vermelho e lembra o último estado verde |
+| `.claude/hooks/verify-gate.mjs` | `Stop`: `prettier --check`, typecheck e `vitest related` nos arquivos alterados (os não commitados e, numa branch de feature, tudo o que foi commitado desde `main`); bloqueia o fim do turno se algo estiver vermelho e lembra o último estado verde. Enquanto um subagente roda em segundo plano, deixa o turno terminar sem checar, porque o agente ainda pode estar editando; checa no fim do turno em que ele devolve o relatório |
 | `.claude/hooks/git-guardrails.mjs` | Bloqueia force push, push para `main`, `reset --hard`, `clean -f`, `checkout .`, `branch -D`, `gh pr merge` |
 | `.claude/hooks/protect-paths.mjs` | Bloqueia a edição de `.env*`, lockfiles e `node_modules/`; nas branches `feat/*` e `fix/*`, também de `CLAUDE.md`, `AGENTS.md`, `CODING_STANDARDS.md` e `.claude/**` |
 | `.claude/skills/ship-ticket/` | `/ship-ticket [#n]`: um ticket de ponta a ponta (branch → implementer → reviews → PR → CI verde); para antes do merge |
