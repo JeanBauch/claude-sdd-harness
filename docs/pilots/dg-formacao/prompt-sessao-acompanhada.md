@@ -91,7 +91,7 @@ Marque com "(no PC)" o passo que exige o computador, como os comandos que só ro
 
 No prompt de um ticket, não copie os critérios de aceite: cite o número do ticket, que é autocontido e é a fonte. Um critério copiado da spec ou da tabela de itens "Unverified" pode ser de outro ticket (A33). Antes de propor um critério novo para um ticket, leia o ticket e os critérios da spec que ele cita: o critério novo pode já existir ou contradizer um deles (A33, S11).
 
-O modelo da sessão é escolhido pelo usuário antes de colar o prompt, e a sessão não o troca sozinha. Escreva-o como passo do usuário, antes do "Objetivo" (A36).
+O modelo da sessão é escolhido pelo usuário antes de colar o prompt, e a sessão não o troca sozinha. Escreva-o como passo do usuário, antes do "Objetivo" (A36). No mesmo passo, o usuário digita `/clear` ou abre uma sessão nova, porque o contexto da sessão anterior não deve seguir carregado (A51).
 
 As skills com `disable-model-invocation`, como `/ship-ticket` e `/relatorio-sessao`, só abrem quando o usuário digita o comando; a sessão não consegue chamá-las. Escreva cada uma como passo do usuário, com o comando completo (por exemplo, "o usuário digita `/ship-ticket 12`"), e não como ação da sessão (A43).
 </formato_abertura>
