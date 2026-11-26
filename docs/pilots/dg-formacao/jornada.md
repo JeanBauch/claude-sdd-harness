@@ -172,6 +172,9 @@ Saiu da análise de registros, auditoria e cotas gratuitas que a sessão acompan
 - **Renovate ou Dependabot:** os requisitos citam o Dependabot na RNF-SEG-13 e o Renovate na tabela de riscos (falha de segurança no Better Auth). A ASSUMPTION 1 do #8 fixa o Better Auth na 1.7.15 e conta com o Renovate. Nenhum dos dois está configurado. A spec B escolhe um e corrige o outro lado.
 - **F3 da spec B:** o prompt leva a categoria "capacidade e cotas" (A18).
 - **R1:** o `search_misses` repete o padrão do registro de segurança (visitante anônimo, termo aleatório). A spec da R1 traz tamanho máximo do termo e teto de termos por dia.
+- **R1, parte visual (decidido pelo usuário em 26/11):** o visual entra todo na R1, e as telas do R0 ficam com o estilo padrão do create-next-app. Duas lacunas, que **precisam de uma avaliação maior com o usuário quando chegar a hora da R1**, antes da R1.1:
+  - o escopo da R1 (seção 10.4) cita home, catálogo, curso e institucionais, mas não as telas de autenticação do R0 (cadastro, login e conta do #16, senha e confirmação do #23, equipe do #24), que o protótipo tem em `login.html`, `cadastro.html` e `perfil.png`;
+  - os requisitos citam `docs/DESIGN.md` (RNF-UX-05 e seção 9), mas o arquivo só existe no protótipo (`F:\Projetos\Frontend\ibav-sorocaba\ibav-sorocaba\docs\DESIGN.md`), não no projeto.
 
 ## Atritos do harness
 
@@ -1040,3 +1043,10 @@ As mesmas do registro do piloto (`docs/playbook.md`), preenchidas no F8 de cada 
 - **Cota (S21):** 5 h: 70% (fim da S20) → 100% por volta das 18:50; janela nova às 19:09 → 52%, com virada às 00:09 de 27/11 · semana: 87% → 97%, 10 pontos, incluindo a sessão acompanhada das decisões da S19 e da S20. Restam 3 pontos até sexta, 27/11, às 12:59. O #17 (Opus) fica para depois da virada, numa janela de 5 h nova (A54). É estimativa.
 - **Próximo:** a S22, com o #17 (Opus), o ticket desbloqueado de menor número; o #25 também está desbloqueado. O #23 espera o #16 e o #18.
 - **Pendentes do usuário:** a leitura do SP3; o merge do PR #41; e se a correção do A45 no template vem antes da retro.
+
+### 26/11/2026 · Sessão acompanhada · Parte visual na R1
+
+- **Pergunta do usuário:** em que momento entra a parte visual, já que as telas do #16 estão com o estilo padrão.
+- **Resposta, pelo que foi lido:** pela seção 10.4 dos requisitos, o design system com os tokens do `DESIGN.md` abre a R1, depois do R0 inteiro, e a skill `ui-design-system` vem antes da R1.1. O projeto tem Tailwind 4.3.3 com o tema padrão, sem shadcn, Radix nem lucide.
+- **Decisão do usuário:** o visual fica todo na R1. As duas lacunas (telas de autenticação fora do escopo da R1 e `DESIGN.md` fora do projeto) ficam em "Levar à spec B e à R1", para uma avaliação maior com o usuário antes da R1.1.
+- **Pendentes do usuário:** os da S21 (a leitura do SP3, o merge do PR #41 e a A45 no template).
