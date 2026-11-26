@@ -379,7 +379,7 @@ f:\Projetos\IA\
 
 | Hook | Evento | Função |
 |---|---|---|
-| `verify-gate.mjs` | `Stop` / `SubagentStop` | `prettier --check` + `tsc --noEmit` + `vitest related --run` nos arquivos não commitados e nos commits da branch desde `main`; exit 2 com a saída no stderr; lembra o último estado verde |
+| `verify-gate.mjs` | `Stop` (não fica em `SubagentStop`: o `Stop` da sessão depois que o subagente volta confere o que ele mudou) | `prettier --check` + `tsc --noEmit` + `vitest related --run` nos arquivos não commitados e nos commits da branch desde `main`; exit 2 com a saída no stderr; lembra o último estado verde |
 | `git-guardrails.mjs` | `PreToolUse` (Bash) | Bloqueia `push --force`, push em `main`, `reset --hard` fora de worktree e `gh pr merge` |
 | `protect-paths.mjs` | `PreToolUse` (Edit\|Write) | Bloqueia `.env*` e migrations já aplicadas |
 | `format.mjs` | `PostToolUse` (Edit\|Write) | Prettier ou ESLint `--fix` no arquivo editado |

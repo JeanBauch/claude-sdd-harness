@@ -43,9 +43,9 @@ Read the report's `Status`:
 
 ## 5. Verify
 
-Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck` and `pnpm test` yourself, each on its own, with `CI=true` set as the CI sets it (in Bash: `CI=true pnpm test`). Some tools behave differently under `CI=true` (typescript-eslint, for one), so a run without it does not predict the CI. `git log main..HEAD --oneline` must show at least one `feat(#<n>)` commit.
+Run `pnpm format:check`, `pnpm lint`, `pnpm typecheck` and `pnpm test` yourself, each on its own, with `CI=true` set as the CI sets it (in Bash: `CI=true pnpm test`). Some tools behave differently under `CI=true` (typescript-eslint, for one), so a run without it does not predict the CI. Then run each command in the ticket's verification section that these four do not cover (a build, an E2E run), in the order the ticket gives. `git log main..HEAD --oneline` must show at least one `feat(#<n>)` commit.
 
-Done when all four exit 0. Their output is the PR's evidence.
+Done when all four, and the ticket's own commands, exit 0. Their output is the PR's evidence.
 
 ## 6. Review
 

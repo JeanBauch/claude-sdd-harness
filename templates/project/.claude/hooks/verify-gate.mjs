@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Stop / SubagentStop hook: the turn cannot end while changed files fail formatting, typecheck or related tests.
+// Stop hook: the turn cannot end while changed files fail formatting, typecheck or related tests.
+// It is not registered on SubagentStop: the session's Stop after a subagent reports back checks what it changed.
 // "Changed" = uncommitted changes plus, on a feature branch, everything committed since it left main,
 // so committing each ticket before the turn ends does not skip the gate.
 // Exit 2 sends stderr back to Claude and keeps it working (Claude Code caps consecutive blocks at 8).
