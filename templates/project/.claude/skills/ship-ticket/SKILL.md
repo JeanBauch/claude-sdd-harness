@@ -76,6 +76,7 @@ Escalate once per ticket. If Opus also returns `stuck`, stop and hand the failin
 1. Write the body with the Skill tool `mattpocock-skills:pr`. Include:
    - `Closes #<n>`, and `Closes #<spec>` when this is the spec's last open ticket;
    - the step 5 evidence;
+   - the red run of each criterion, copied from the implementer's `Red:` lines and attributed to the implementer; a red you rebuild afterwards is labelled as rebuilt;
    - a findings table (finding, verdict, reason);
    - the model used and whether it escalated.
 2. `git push -u origin feat/<n>-<slug>`. The human approves the push.
@@ -101,7 +102,7 @@ Comment on the ticket with one line:
 
 `Métricas: modelo=<sonnet|opus|sonnet→opus> · findings=<fix>/<accept>/<reject> · assumptions=<n> · ci-vermelho=<n>`
 
-`assumptions` counts the ASSUMPTION items on the ticket. An item that a later `ASSUMPTION (substitui ...)` comment replaces counts once.
+`findings` counts the rows of the PR's findings table, one verdict each, including the items the fix call returned. `assumptions` counts the ASSUMPTION items on the ticket. An item that a later `ASSUMPTION (substitui ...)` comment replaces counts once.
 
 Then tell the human:
 
