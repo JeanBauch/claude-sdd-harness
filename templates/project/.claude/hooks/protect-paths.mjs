@@ -3,7 +3,7 @@
 // Lockfiles change only through the package manager (`pnpm add/remove/install`).
 // Rule files (CLAUDE.md, AGENTS.md, CODING_STANDARDS.md, .claude/**) are a separate layer: on a ticket
 // branch (feat/*, fix/*) they are read-only, so an implementer never rewrites its own rules mid-ticket.
-// They change on retro branches (chore/*), reviewed by the human.
+// They change on any other branch, such as a retro (chore/*) or a harness sync (docs/*), reviewed by the human.
 import { spawnSync } from 'node:child_process'
 import { existsSync, realpathSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
